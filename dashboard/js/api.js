@@ -24,11 +24,11 @@ async function apiFetch(path) {
 }
 
 export async function fetchStats() {
-  return apiFetch("/stats/summary");
+  return apiFetch("/v1/stats/summary");
 }
 
 export async function fetchUpcoming() {
-  return apiFetch("/asteroids/upcoming");
+  return apiFetch("/v1/asteroids/upcoming");
 }
 
 export async function fetchAsteroids({ limit, offset, hazardous, risk_label } = {}) {
@@ -38,11 +38,11 @@ export async function fetchAsteroids({ limit, offset, hazardous, risk_label } = 
   if (hazardous != null) params.append("hazardous", hazardous);
   if (risk_label != null) params.append("risk_label", risk_label);
   const qs = params.toString();
-  return apiFetch("/asteroids" + (qs ? "?" + qs : ""));
+  return apiFetch("/v1/asteroids" + (qs ? "?" + qs : ""));
 }
 
 export async function fetchAsteroid(neo_id) {
-  return apiFetch(`/asteroids/${neo_id}`);
+  return apiFetch(`/v1/asteroids/${neo_id}`);
 }
 
 export async function fetchSolarEvents({ limit, offset, event_type } = {}) {
@@ -51,9 +51,9 @@ export async function fetchSolarEvents({ limit, offset, event_type } = {}) {
   if (offset != null) params.append("offset", offset);
   if (event_type != null) params.append("event_type", event_type);
   const qs = params.toString();
-  return apiFetch("/solar-events" + (qs ? "?" + qs : ""));
+  return apiFetch("/v1/solar-events" + (qs ? "?" + qs : ""));
 }
 
 export async function fetchEarthDirected() {
-  return apiFetch("/solar-events/earth-directed");
+  return apiFetch("/v1/solar-events/earth-directed");
 }
