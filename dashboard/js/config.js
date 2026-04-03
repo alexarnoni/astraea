@@ -1,5 +1,6 @@
 // config.js — configuração global da API
 
 export const CONFIG = {
-  API_BASE_URL: "http://localhost:8000/v1",
+  API_BASE_URL: "https://astraea.alexarnoni.com",
+  VERSION: "1.0.0",
 };
