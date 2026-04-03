@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASTRAEA — Asteroides</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <nav class="nav">
+    <a href="index.html" class="nav__logo">ASTRAEA</a>
+    <ul class="nav__links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="asteroides.html">Asteroides</a></li>
+      <li><a href="eventos.html">Eventos Solares</a></li>
+      <li><a href="sobre.html">Sobre</a></li>
+    </ul>
+  </nav>
+  <main class="page-content">
+    <h1 class="hero__title" style="margin-bottom:1.5rem">// asteroides</h1>
+    <div class="filters" id="filters">
+      <button class="filter-btn active" data-risk="">Todos</button>
+      <button class="filter-btn" data-risk="alto">Alto</button>
+      <button class="filter-btn" data-risk="médio">Médio</button>
+      <button class="filter-btn" data-risk="baixo">Baixo</button>
+      <label class="filter-checkbox">
+        <input type="checkbox" id="hazardous-check" /> Apenas perigosos
+      </label>
+    </div>
+    <div id="asteroids-table"></div>
+    <div class="pagination" id="pagination">
+      <button class="pagination__btn" id="btn-prev" disabled>← Anterior</button>
+      <span class="pagination__info" id="page-info">página 1</span>
+      <button class="pagination__btn" id="btn-next">Próximo →</button>
+    </div>
+  </main>
+  <footer class="footer">
+    <p>ASTRAEA — monitoramento de objetos próximos à Terra &amp; eventos solares</p>
+    <p>dados: <a href="https://api.nasa.gov/" target="_blank" rel="noopener">NASA NeoWs &amp; DONKI</a> · <a href="https://github.com/" target="_blank" rel="noopener">GitHub</a></p>
+  </footer>
+  <nav class="ast-bottom-nav" aria-label="Navegação mobile">
+    <a href="index.html" class="ast-bottom-nav-item">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 9.5L10 3l7 6.5V17a1 1 0 01-1 1h-4v-4H8v4H4a1 1 0 01-1-1V9.5z"/></svg>
+      <span>Home</span>
+    </a>
+    <a href="asteroides.html" class="ast-bottom-nav-item active">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="2"/><path d="M10 3v2M10 15v2M3 10h2M15 10h2"/></svg>
+      <span>Asteroides</span>
+    </a>
+    <a href="eventos.html" class="ast-bottom-nav-item">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M11 3L5 11h5l-1 6 6-8h-5l1-6z"/></svg>
+      <span>Eventos</span>
+    </a>
+    <a href="sobre.html" class="ast-bottom-nav-item">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 9v5M10 7v.5"/></svg>
+      <span>Sobre</span>
+    </a>
+  </nav>
+  <script type="module" src="js/asteroides.js"></script>
+</body>
+</html>

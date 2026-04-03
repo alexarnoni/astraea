@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASTRAEA — Sobre</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <nav class="nav">
+    <a href="index.html" class="nav__logo">ASTRAEA</a>
+    <ul class="nav__links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="asteroides.html">Asteroides</a></li>
+      <li><a href="eventos.html">Eventos Solares</a></li>
+      <li><a href="sobre.html">Sobre</a></li>
+    </ul>
+  </nav>
+  <main class="page-content">
+    <div class="hero" style="padding-bottom:1rem">
+      <h1 class="hero__title">// sobre o projeto</h1>
+      <p class="hero__subtitle">monitoramento de objetos próximos à Terra e eventos solares</p>
+    </div>
+
+    <section style="max-width:720px;margin-bottom:3rem">
+      <p class="section-label">o que é o astraea</p>
+      <p style="font-size:1rem;line-height:1.8;color:var(--text);font-weight:300;margin-bottom:1rem">
+        O Astraea é um sistema de monitoramento que coleta, processa e apresenta dados sobre asteroides
+        que passam perto da Terra e eventos solares. Os dados vêm diretamente das APIs públicas da NASA
+        e são processados por um pipeline de dados automatizado.
+      </p>
+      <p style="font-size:1rem;line-height:1.8;color:var(--text);font-weight:300;margin-bottom:1rem">
+        Cada asteroide recebe uma classificação de risco calculada por um modelo de machine learning
+        treinado com dados históricos. Os eventos solares — como ejeções de massa coronal (CMEs) e
+        tempestades geomagnéticas (GSTs) — são monitorados e classificados por intensidade.
+      </p>
+      <p style="font-size:1rem;line-height:1.8;color:var(--text);font-weight:300">
+        O objetivo é tornar dados científicos complexos acessíveis de forma clara e visual.
+      </p>
+    </section>
+
+    <section style="margin-bottom:3rem">
+      <p class="section-label">stack técnica</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.75rem">
+        <div class="stat-card" style="padding:1rem">
+          <div class="stat-card__value" style="font-size:1rem">FastAPI</div>
+          <div class="stat-card__label">API REST · Python</div>
+        </div>
+        <div class="stat-card" style="padding:1rem">
+          <div class="stat-card__value" style="font-size:1rem">PostgreSQL</div>
+          <div class="stat-card__label">Banco de dados</div>
+        </div>
+        <div class="stat-card" style="padding:1rem">
+          <div class="stat-card__value" style="font-size:1rem">dbt</div>
+          <div class="stat-card__label">Transformação de dados</div>
+        </div>
+        <div class="stat-card" style="padding:1rem">
+          <div class="stat-card__value" style="font-size:1rem">scikit-learn</div>
+          <div class="stat-card__label">Modelo ML de risco</div>
+        </div>
+        <div class="stat-card" style="padding:1rem">
+          <div class="stat-card__value" style="font-size:1rem">Python</div>
+          <div class="stat-card__label">Coleta de dados</div>
+        </div>
+        <div class="stat-card" style="padding:1rem">
+          <div class="stat-card__value" style="font-size:1rem">HTML/CSS/JS</div>
+          <div class="stat-card__label">Dashboard estático</div>
+        </div>
+      </div>
+    </section>
+
+    <section style="margin-bottom:3rem">
+      <p class="section-label">fontes de dados</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;max-width:600px">
+        <div class="event-card">
+          <div class="event-card__header">
+            <span class="event-card__type">NASA NeoWs</span>
+          </div>
+          <p style="font-size:0.85rem;color:var(--muted);margin-top:0.5rem">
+            Near Earth Object Web Service — dados de asteroides próximos à Terra.
+          </p>
+          <a href="https://api.nasa.gov/" target="_blank" rel="noopener" style="font-size:0.8rem;margin-top:0.5rem;display:inline-block">
+            ↗ api.nasa.gov
+          </a>
+        </div>
+        <div class="event-card">
+          <div class="event-card__header">
+            <span class="event-card__type">NASA DONKI</span>
+          </div>
+          <p style="font-size:0.85rem;color:var(--muted);margin-top:0.5rem">
+            Space Weather Database — eventos solares como CMEs e tempestades geomagnéticas.
+          </p>
+          <a href="https://kauai.ccmc.gsfc.nasa.gov/DONKI/" target="_blank" rel="noopener" style="font-size:0.8rem;margin-top:0.5rem;display:inline-block">
+            ↗ kauai.ccmc.gsfc.nasa.gov/DONKI
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <p class="section-label">código-fonte</p>
+      <a href="https://github.com/" target="_blank" rel="noopener" class="mono" style="font-size:0.9rem">
+        ↗ Ver no GitHub
+      </a>
+    </section>
+  </main>
+  <footer class="footer">
+    <p>ASTRAEA — monitoramento de objetos próximos à Terra &amp; eventos solares</p>
+    <p>dados: <a href="https://api.nasa.gov/" target="_blank" rel="noopener">NASA NeoWs &amp; DONKI</a> · <a href="https://github.com/" target="_blank" rel="noopener">GitHub</a></p>
+  </footer>
+  <nav class="ast-bottom-nav" aria-label="Navegação mobile">
+    <a href="index.html" class="ast-bottom-nav-item">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 9.5L10 3l7 6.5V17a1 1 0 01-1 1h-4v-4H8v4H4a1 1 0 01-1-1V9.5z"/></svg>
+      <span>Home</span>
+    </a>
+    <a href="asteroides.html" class="ast-bottom-nav-item">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="2"/><path d="M10 3v2M10 15v2M3 10h2M15 10h2"/></svg>
+      <span>Asteroides</span>
+    </a>
+    <a href="eventos.html" class="ast-bottom-nav-item">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M11 3L5 11h5l-1 6 6-8h-5l1-6z"/></svg>
+      <span>Eventos</span>
+    </a>
+    <a href="sobre.html" class="ast-bottom-nav-item active">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 9v5M10 7v.5"/></svg>
+      <span>Sobre</span>
+    </a>
+  </nav>
+  <script>
+    document.querySelectorAll('.nav__links a').forEach(a => {
+      if (a.getAttribute('href') === 'sobre.html') a.classList.add('active');
+    });
+  </script>
+</body>
+</html>

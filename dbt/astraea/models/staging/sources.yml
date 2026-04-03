@@ -1,0 +1,33 @@
+version: 2
+
+sources:
+  - name: astraea
+    database: astraea
+    schema: raw
+    tables:
+      - name: neo_feeds
+        description: "Dados brutos de asteroides próximos da Terra (NASA NeoWs)"
+        columns:
+          - name: id
+          - name: neo_id
+            tests:
+              - not_null
+          - name: name
+          - name: raw_data
+          - name: feed_date
+            tests:
+              - not_null
+          - name: ingested_at
+      - name: solar_events
+        description: "Dados brutos de eventos solares (NASA DONKI)"
+        columns:
+          - name: id
+          - name: event_id
+            tests:
+              - not_null
+          - name: event_type
+            tests:
+              - not_null
+          - name: raw_data
+          - name: event_date
+          - name: ingested_at

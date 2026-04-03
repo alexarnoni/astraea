@@ -1,0 +1,44 @@
+# Environment
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Ambientes virtuais específicos do projeto
+.venv-dbt/
+.venv-ml/
+.venv-ml-wsl/
+ml/.venv/
+
+# dbt
+.dbt/
+target/
+dbt_packages/
+
+# ML — modelo serializado (gerado por ml/train.py)
+ml/models/
+ml/models/*.joblib
+
+# Scripts de teste de conexão temporários
+ml/_test_conn*.py
+
+# Logs
+logs/
+*.log
+
+# Node
+dashboard/node_modules/
+
+# Sistema & notebooks
+.DS_Store
+notebooks/.ipynb_checkpoints/
+
+# VS Code
+.vscode/

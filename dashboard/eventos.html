@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASTRAEA — Eventos Solares</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    #events-grid { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 640px) { #events-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <a href="index.html" class="nav__logo">ASTRAEA</a>
+    <ul class="nav__links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="asteroides.html">Asteroides</a></li>
+      <li><a href="eventos.html" class="active">Eventos Solares</a></li>
+      <li><a href="sobre.html">Sobre</a></li>
+    </ul>
+  </nav>
+  <main class="page-content">
+    <section class="hero">
+      <p class="hero__subtitle">// monitoramento de atividade solar</p>
+      <h1 class="hero__title">// eventos solares</h1>
+      <p style="color:var(--muted);font-size:0.95rem;max-width:640px;margin-top:0.75rem;line-height:1.7">
+        O Sol emite constantemente partículas e radiação que podem afetar a Terra. Monitoramos dois tipos principais:
+        ejeções de massa coronal (CME), que são explosões de plasma solar, e tempestades geomagnéticas (GST),
+        perturbações no campo magnético terrestre que podem impactar satélites, redes elétricas e comunicações.
+      </p>
+    </section>
+    <div class="filters" id="event-filters">
+      <button class="filter-btn active" data-type="">Todos</button>
+      <button class="filter-btn" data-type="CME">CME</button>
+      <button class="filter-btn" data-type="GST">GST</button>
+    </div>
+    <div id="events-grid" style="display:grid;gap:1rem"></div>
+  </main>
+  <footer class="footer">
+    <p>ASTRAEA — monitoramento de objetos próximos à Terra &amp; eventos solares</p>
+    <p>dados: <a href="https://api.nasa.gov/" target="_blank" rel="noopener">NASA NeoWs &amp; DONKI</a> · <a href="https://github.com/" target="_blank" rel="noopener">GitHub</a></p>
+  </footer>
+  <nav class="ast-bottom-nav" aria-label="Navegação mobile">
+    <a href="index.html" class="ast-bottom-nav-item">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 9.5L10 3l7 6.5V17a1 1 0 01-1 1h-4v-4H8v4H4a1 1 0 01-1-1V9.5z"/></svg>
+      <span>Home</span>
+    </a>
+    <a href="asteroides.html" class="ast-bottom-nav-item">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="2"/><path d="M10 3v2M10 15v2M3 10h2M15 10h2"/></svg>
+      <span>Asteroides</span>
+    </a>
+    <a href="eventos.html" class="ast-bottom-nav-item active">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M11 3L5 11h5l-1 6 6-8h-5l1-6z"/></svg>
+      <span>Eventos</span>
+    </a>
+    <a href="sobre.html" class="ast-bottom-nav-item">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 9v5M10 7v.5"/></svg>
+      <span>Sobre</span>
+    </a>
+  </nav>
+  <script type="module" src="js/eventos.js"></script>
+</body>
+</html>

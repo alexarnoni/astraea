@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASTRAEA — Detalhe do Asteroide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .countdown--danger .countdown__value { color: var(--badge-alto-bg); }
+    .countdown-box {
+      display: inline-flex;
+      gap: 1rem;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+    .countdown-box--danger {
+      border-color: var(--badge-alto-bg);
+      box-shadow: 0 0 0 1px rgba(239,68,68,0.3);
+    }
+    .risk-scale {
+      display: flex;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      width: 100%;
+    }
+    .risk-scale__low  { flex: 1; background: var(--badge-baixo-bg); }
+    .risk-scale__mid  { flex: 1; background: var(--badge-medio-bg); }
+    .risk-scale__high { flex: 1; background: var(--badge-alto-bg); }
+    .risk-scale__marker {
+      position: relative;
+      width: 100%;
+      height: 8px;
+    }
+    .risk-scale__marker::after {
+      content: '';
+      position: absolute;
+      top: -2px;
+      width: 4px;
+      height: 12px;
+      background: var(--text);
+      border-radius: 2px;
+      transform: translateX(-50%);
+    }
+    .risk-scale-wrap { position: relative; }
+    .risk-scale-labels {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      margin-top: 0.35rem;
+    }
+    .hero__hazardous-badge {
+      display: inline-block;
+      padding: 0.3em 0.8em;
+      background: var(--badge-alto-bg);
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+      margin-top: 0.75rem;
+    }
+    .back-btn {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.5em 1em;
+      text-decoration: none;
+      transition: all 0.2s;
+      margin-top: 2rem;
+    }
+    .back-btn:hover {
+      color: var(--text);
+      border-color: var(--accent);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <a href="index.html" class="nav__logo">ASTRAEA</a>
+    <ul class="nav__links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="asteroides.html" class="active">Asteroides</a></li>
+      <li><a href="eventos.html">Eventos Solares</a></li>
+      <li><a href="sobre.html">Sobre</a></li>
+    </ul>
+  </nav>
+  <main class="page-content">
+    <nav class="breadcrumb" aria-label="Navegação estrutural">
+      <a href="index.html">Visão geral</a>
+      <span class="breadcrumb__sep" aria-hidden="true">›</span>
+      <a href="asteroides.html">Asteroides</a>
+      <span class="breadcrumb__sep" aria-hidden="true">›</span>
+      <span class="breadcrumb__current" id="breadcrumb-name">—</span>
+    </nav>
+
+    <div id="asteroid-hero"></div>
+    <div id="countdown-section"></div>
+    <div class="metric-grid" id="metric-cards" style="margin-top:1.5rem"></div>
+    <div id="ml-panel" style="margin-top:1.5rem"></div>
+    <div id="jpl-link" style="margin-top:1.5rem"></div>
+    <div><a href="asteroides.html" class="back-btn">← Voltar para asteroides</a></div>
+  </main>
+  <footer class="footer">
+    <p>ASTRAEA — monitoramento de objetos próximos à Terra &amp; eventos solares</p>
+    <p>dados: <a href="https://api.nasa.gov/" target="_blank" rel="noopener">NASA NeoWs &amp; DONKI</a> · <a href="https://github.com/" target="_blank" rel="noopener">GitHub</a></p>
+  </footer>
+  <nav class="ast-bottom-nav" aria-label="Navegação mobile">
+    <a href="index.html" class="ast-bottom-nav-item">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 9.5L10 3l7 6.5V17a1 1 0 01-1 1h-4v-4H8v4H4a1 1 0 01-1-1V9.5z"/></svg>
+      <span>Home</span>
+    </a>
+    <a href="asteroides.html" class="ast-bottom-nav-item active">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="2"/><path d="M10 3v2M10 15v2M3 10h2M15 10h2"/></svg>
+      <span>Asteroides</span>
+    </a>
+    <a href="eventos.html" class="ast-bottom-nav-item">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M11 3L5 11h5l-1 6 6-8h-5l1-6z"/></svg>
+      <span>Eventos</span>
+    </a>
+    <a href="sobre.html" class="ast-bottom-nav-item">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 9v5M10 7v.5"/></svg>
+      <span>Sobre</span>
+    </a>
+  </nav>
+  <script type="module" src="js/detalhe.js"></script>
+</body>
+</html>
