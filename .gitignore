@@ -42,3 +42,9 @@ notebooks/.ipynb_checkpoints/
 
 # VS Code
 .vscode/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
