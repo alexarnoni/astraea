@@ -60,7 +60,23 @@ server {
 
 Ou se usar Cloudflare Tunnel, configurar o tunnel para apontar `astraea.alexarnoni.com` → `localhost:8002`.
 
-## 7. Deploy do frontend no Cloudflare Pages
+## 7. Configurar cron do pipeline
+
+Editar o crontab do usuário na VM:
+
+```bash
+crontab -e
+```
+
+Adicionar a linha:
+
+```
+0 1 * * * DATABASE_URL=postgresql://astraea:SENHA@db:5432/astraea /opt/astraea/scripts/run_pipeline.sh >> /var/log/astraea_pipeline.log 2>&1
+```
+
+> Substituir `SENHA` pela senha real do banco definida no `.env`.
+
+## 8. Deploy do frontend no Cloudflare Pages
 
 No painel do Cloudflare Pages:
 1. Conectar ao repositório `github.com/alexarnoni/astraea`
