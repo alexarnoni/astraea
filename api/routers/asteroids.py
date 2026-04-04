@@ -27,6 +27,10 @@ def _row_to_asteroid(row) -> AsteroidResponse:
         risk_label=row.risk_label,
         risk_score_ml=float(row.risk_score_ml) if row.risk_score_ml is not None else None,
         risk_label_ml=row.risk_label_ml,
+        orbit_class=row.orbit_class,
+        is_sentry_object=row.is_sentry_object,
+        first_observation_date=str(row.first_observation_date) if row.first_observation_date is not None else None,
+        nasa_jpl_url=row.nasa_jpl_url,
     )
 
 

@@ -51,11 +51,16 @@ function renderHero(asteroid) {
     ? `<div class="hero__hazardous-badge">⚠ Potencialmente perigoso</div>`
     : "";
 
+  const sentryBadge = asteroid.is_sentry_object
+    ? `<div class="hero__sentry-badge hero__sentry-badge--pulse">// LISTA SENTRY<span class="hero__sentry-tooltip">Este objeto está na lista Sentry da NASA — tem probabilidade não-zero de impacto com a Terra nos próximos 100 anos</span></div>`
+    : "";
+
   const heroEl = document.getElementById("asteroid-hero");
   if (!heroEl) return;
   heroEl.innerHTML = `<div class="hero">
   <h1 class="hero__title">${asteroid.name}</h1>
   ${hazardousBadge}
+  ${sentryBadge}
   <p class="hero__subtitle" style="margin-top:0.75rem">Objeto próximo à Terra monitorado pela NASA · aproximação em ${formatDate(asteroid.close_approach_date)}</p>
 </div>`;
 }
@@ -167,6 +172,16 @@ function renderMetricCards(asteroid) {
       `${scoreDisplay} ${asteroid.risk_label_ml ? renderRiskBadge(asteroid.risk_label_ml) : ""}`,
       "Score ML",
       "Score de risco calculado por modelo de machine learning treinado com dados históricos da NASA.",
+    ],
+    [
+      asteroid.orbit_class ?? "—",
+      "Grupo orbital",
+      "Classificação do grupo orbital: Apollo (cruzam a órbita da Terra), Aten (órbita menor que a Terra), Amor (aproximam-se mas não cruzam).",
+    ],
+    [
+      formatDate(asteroid.first_observation_date),
+      "Descoberto em",
+      "Data da primeira observação registrada do asteroide.",
     ],
   ];
 
@@ -325,10 +340,11 @@ function renderMLPanel(asteroid) {
 
 // ─── Render JPL Link ───────────────────────────────────────────────────────────
 
-function renderJPLLink(id) {
+function renderJPLLink(id, url) {
   const container = document.getElementById("jpl-link");
   if (!container) return;
-  container.innerHTML = `<a href="https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=${id}" target="_blank" rel="noopener" class="mono" style="font-size:0.85rem">
+  const href = url ?? `https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=${id}`;
+  container.innerHTML = `<a href="${href}" target="_blank" rel="noopener" class="mono" style="font-size:0.85rem">
   ↗ Ver no NASA JPL Small-Body Database
 </a>`;
 }
@@ -348,7 +364,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderMetricCards(asteroid);
     renderPerspectiveSection(asteroid);
     renderMLPanel(asteroid);
-    renderJPLLink(neoId);
+    renderJPLLink(neoId, asteroid.nasa_jpl_url);
   } catch (err) {
     const heroContainer = document.getElementById("asteroid-hero");
     if (!heroContainer) return;

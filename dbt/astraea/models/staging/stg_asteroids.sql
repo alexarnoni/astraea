@@ -43,7 +43,23 @@ renamed as (
 
         -- flag NASA de objeto potencialmente perigoso
         (raw_data ->> 'is_potentially_hazardous_asteroid')::boolean
-            as is_potentially_hazardous
+            as is_potentially_hazardous,
+
+        -- grupo orbital
+        raw_data -> 'orbital_data' ->> 'orbit_class_type'
+            as orbit_class,
+
+        -- presença na lista Sentry da NASA
+        (raw_data ->> 'is_sentry_object')::boolean
+            as is_sentry_object,
+
+        -- data da primeira observação
+        raw_data -> 'orbital_data' ->> 'first_observation_date'
+            as first_observation_date,
+
+        -- link direto para o JPL Small-Body Database
+        raw_data ->> 'nasa_jpl_url'
+            as nasa_jpl_url
 
     from source
 )

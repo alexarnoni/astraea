@@ -21,6 +21,10 @@ class AsteroidResponse(BaseModel):
     risk_label: Optional[str] = None
     risk_score_ml: Optional[float] = None
     risk_label_ml: Optional[str] = None
+    orbit_class: Optional[str] = None
+    is_sentry_object: Optional[bool] = None
+    first_observation_date: Optional[str] = None
+    nasa_jpl_url: Optional[str] = None
 
 
 class SolarEventResponse(BaseModel):
