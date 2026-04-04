@@ -1,15 +1,17 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from database import get_db
 from models import StatsResponse
+from main import limiter
 
 router = APIRouter()
 
 
 @router.get("/stats/summary", response_model=StatsResponse)
-def stats_summary(db: Session = Depends(get_db)):
+@limiter.limit("60/minute")
+def stats_summary(request: Request, db: Session = Depends(get_db)):
     ast = db.execute(text("""
         SELECT
             COUNT(*) AS total,

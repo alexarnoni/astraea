@@ -1,11 +1,12 @@
 from datetime import date
 from typing import List, Optional
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from database import get_db
 from models import SolarEventResponse
+from main import limiter
 
 router = APIRouter()
 
@@ -28,7 +29,9 @@ def _row_to_solar(row) -> SolarEventResponse:
 
 
 @router.get("/solar-events", response_model=List[SolarEventResponse])
+@limiter.limit("60/minute")
 def list_solar_events(
+    request: Request,
     limit: int = 50,
     offset: int = 0,
     event_type: Optional[str] = None,
@@ -61,7 +64,8 @@ def list_solar_events(
 
 
 @router.get("/solar-events/earth-directed", response_model=List[SolarEventResponse])
-def earth_directed_events(db: Session = Depends(get_db)):
+@limiter.limit("60/minute")
+def earth_directed_events(request: Request, db: Session = Depends(get_db)):
     # sem coluna is_earth_directed: retorna CMEs com speed alta (proxy para impacto terrestre)
     sql = text("""
         SELECT * FROM mart.mart_solar_events

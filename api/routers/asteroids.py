@@ -1,11 +1,12 @@
 from datetime import date
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from database import get_db
 from models import AsteroidResponse
+from main import limiter
 
 router = APIRouter()
 
@@ -35,7 +36,9 @@ def _row_to_asteroid(row) -> AsteroidResponse:
 
 
 @router.get("/asteroids", response_model=List[AsteroidResponse])
+@limiter.limit("60/minute")
 def list_asteroids(
+    request: Request,
     limit: int = 50,
     offset: int = 0,
     hazardous: Optional[bool] = None,
@@ -72,7 +75,8 @@ def list_asteroids(
 
 
 @router.get("/asteroids/upcoming", response_model=List[AsteroidResponse])
-def upcoming_asteroids(db: Session = Depends(get_db)):
+@limiter.limit("60/minute")
+def upcoming_asteroids(request: Request, db: Session = Depends(get_db)):
     sql = text("""
         SELECT * FROM mart.mart_asteroids
         WHERE close_approach_date >= CURRENT_DATE
@@ -84,7 +88,8 @@ def upcoming_asteroids(db: Session = Depends(get_db)):
 
 
 @router.get("/asteroids/{neo_id}", response_model=AsteroidResponse)
-def get_asteroid(neo_id: str, db: Session = Depends(get_db)):
+@limiter.limit("60/minute")
+def get_asteroid(request: Request, neo_id: str, db: Session = Depends(get_db)):
     sql = text("SELECT * FROM mart.mart_asteroids WHERE neo_id = :neo_id")
     row = db.execute(sql, {"neo_id": neo_id}).fetchone()
     if row is None:
