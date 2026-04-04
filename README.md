@@ -1,128 +1,83 @@
 # 🌌 Astraea
 
-**Plataforma de monitoramento de objetos próximos à Terra e eventos solares**, alimentada pela API da NASA e com classificação de risco via Machine Learning.
+> Real-time near-Earth object monitoring and solar event tracking with ML-powered risk classification.
+
+[![Live](https://img.shields.io/badge/live-astraea.alexarnoni.com-4a9eff)](https://astraea.alexarnoni.com)
+[![API](https://img.shields.io/badge/api-astraea--api.alexarnoni.com-4a9eff)](https://astraea-api.alexarnoni.com/docs)
+[![Python](https://img.shields.io/badge/python-3.11+-blue)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 ---
 
-## Visão Geral
+## Overview
 
-O Astraea coleta dados em tempo real da NASA, transforma e enriquece essas informações com dbt, classifica o risco de asteroides com um modelo de Random Forest e expõe tudo via uma API REST — com um dashboard web para visualização.
+Astraea is an end-to-end data pipeline that ingests asteroid and solar event data from NASA APIs, transforms it with dbt, scores each object with a Random Forest classifier, and exposes everything through a public REST API and a web dashboard.
 
-```
+The project covers the full data engineering lifecycle — ingestion, transformation, ML inference, API serving, and frontend — running on a self-managed Oracle VM with automated daily updates.
+
+![Astraea Dashboard](docs/screenshot.png)
+
+---
+
+## Architecture
 NASA APIs (NeoWs + DONKI)
-        │
-        ▼
-  [Collector] ──► PostgreSQL (raw)
-                        │
-                        ▼
-                   [dbt] ──► staging / mart
-                        │
-              ┌─────────┴──────────┐
-              ▼                    ▼
-          [ML Model]           [FastAPI]
-        (risk scoring)             │
-              │                    ▼
-              └──────────► [Dashboard Web]
-```
+│
+▼
+[Collector] ──► PostgreSQL (raw)
+│
+▼
+[dbt Core]
+staging / mart layers
+│
+┌────────┴────────┐
+▼                 ▼
+[Random Forest]     [FastAPI]
+(risk scoring)          │
+│                 ▼
+└────────► [Dashboard]
+
+**Daily automation:** cron triggers data collection at 00:30 UTC → dbt transformations + ML scoring at 01:00 UTC.
 
 ---
 
-## Componentes
+## Tech Stack
 
-| Componente | Tecnologia | Descrição |
+| Layer | Technology |
+|---|---|
+| Ingestion | Python, APScheduler, NASA NeoWs + DONKI APIs |
+| Storage | PostgreSQL |
+| Transformation | dbt Core |
+| Machine Learning | scikit-learn (RandomForestClassifier), joblib |
+| API | FastAPI, slowapi (rate limiting) |
+| Frontend | Vanilla JS, HTML/CSS |
+| Infrastructure | Oracle VM, Nginx, Let's Encrypt, Cloudflare Pages |
+
+---
+
+## Live Demo
+
+- **Dashboard:** [astraea.alexarnoni.com](https://astraea.alexarnoni.com)
+- **API:** [astraea-api.alexarnoni.com/docs](https://astraea-api.alexarnoni.com/docs)
+
+---
+
+## API Reference
+
+Base URL: `https://astraea-api.alexarnoni.com/v1`
+
+Rate limit: 60 requests/minute per IP.
+
+| Method | Endpoint | Description |
 |---|---|---|
-| `collector/` | Python + APScheduler | Coleta diária de asteroides (NeoWs) e eventos solares (DONKI/CME, DONKI/GST) |
-| `dbt/astraea/` | dbt Core + PostgreSQL | Transformação dos dados raw → staging → mart com score de risco |
-| `ml/` | scikit-learn + joblib | Treinamento e scoring batch de classificador de risco (Random Forest) |
-| `api/` | FastAPI | API REST com endpoints de asteroides, eventos solares e estatísticas |
-| `dashboard/` | HTML/CSS/JS | Interface web para visualização dos dados |
-| `scripts/` | SQL | Inicialização idempotente do banco de dados |
+| `GET` | `/asteroids` | List asteroids with optional filters (date, risk, hazardous) |
+| `GET` | `/asteroids/upcoming` | Next close approaches from today |
+| `GET` | `/asteroids/{neo_id}` | Full details for a specific asteroid |
+| `GET` | `/solar-events` | List solar events (CME, GST) with filters |
+| `GET` | `/solar-events/earth-directed` | Earth-directed coronal mass ejections |
+| `GET` | `/stats/summary` | Aggregate statistics across all collected data |
+| `GET` | `/health` | API health check |
 
----
-
-## Pré-requisitos
-
-- [Docker](https://www.docker.com/) e Docker Compose
-- Python 3.11+
-- [dbt Core](https://docs.getdbt.com/docs/core/installation) (para rodar transformações localmente)
-- Chave de API da NASA — obtenha gratuitamente em [api.nasa.gov](https://api.nasa.gov/)
-
----
-
-## Configuração
-
-1. Clone o repositório:
-
-```bash
-git clone https://github.com/alexarnoni/astraea.git
-cd astraea
-```
-
-2. Copie o arquivo de variáveis de ambiente e preencha:
-
-```bash
-cp .env.example .env
-```
-
-```env
-POSTGRES_USER=astraea
-POSTGRES_PASSWORD=sua_senha_aqui
-POSTGRES_DB=astraea
-DATABASE_URL=postgresql://astraea:sua_senha_aqui@db:5432/astraea
-NASA_API_KEY=sua_chave_aqui
-```
-
----
-
-## Como Rodar
-
-### Subir tudo com Docker Compose
-
-```bash
-docker-compose up --build
-```
-
-Isso sobe o PostgreSQL, o collector (com coleta imediata + agendamento diário) e a API.
-
-### Rodar as transformações dbt
-
-```bash
-cd dbt/astraea
-dbt run
-dbt test
-```
-
-### Treinar o modelo de ML
-
-```bash
-python ml/train.py
-```
-
-### Executar scoring batch
-
-```bash
-python ml/predict.py
-```
-
----
-
-## API
-
-A API estará disponível em `http://localhost:8000`. Documentação interativa em `http://localhost:8000/docs`.
-
-### Endpoints principais
-
-| Método | Endpoint | Descrição |
-|---|---|---|
-| `GET` | `/v1/asteroids` | Lista asteroides com filtros (data, risco, hazardous) |
-| `GET` | `/v1/asteroids/upcoming` | Próximas aproximações (a partir de hoje) |
-| `GET` | `/v1/asteroids/{neo_id}` | Detalhes de um asteroide específico |
-| `GET` | `/v1/solar-events` | Lista eventos solares (CME, GST) com filtros |
-| `GET` | `/v1/solar-events/earth-directed` | CMEs registrados |
-| `GET` | `/v1/stats/summary` | Resumo estatístico geral |
-
-### Exemplo de resposta — `/v1/stats/summary`
-
+**Example response — `/v1/stats/summary`**
 ```json
 {
   "total_asteroids": 1420,
@@ -140,43 +95,86 @@ A API estará disponível em `http://localhost:8000`. Documentação interativa 
 
 ---
 
-## Modelo de Risco (ML)
+## ML Risk Model
 
-O classificador usa **Random Forest** treinado sobre dados históricos do mart, com as seguintes features:
+A **Random Forest classifier** trained on historical close approach data scores each asteroid into three risk levels: `low`, `medium`, or `high`.
 
-| Feature | Descrição |
+**Features used:**
+
+| Feature | Description |
 |---|---|
-| `miss_distance_lunar` | Distância de passagem em unidades lunares |
-| `relative_velocity_km_s` | Velocidade relativa em km/s |
-| `diameter_avg_km` | Diâmetro médio estimado em km |
-| `absolute_magnitude_h` | Magnitude absoluta |
-| `is_potentially_hazardous` | Flag NASA de objeto potencialmente perigoso |
+| `miss_distance_lunar` | Miss distance in lunar units |
+| `relative_velocity_km_s` | Relative velocity in km/s |
+| `diameter_avg_km` | Estimated average diameter in km |
+| `absolute_magnitude_h` | Absolute magnitude (H) |
+| `is_potentially_hazardous` | NASA potentially hazardous object flag |
+| `orbit_class` | Orbital classification group |
+| `is_sentry_object` | Listed on NASA Sentry impact monitoring system |
 
-**Labels de saída:** `baixo` · `médio` · `alto`
-
-O modelo é serializado em `ml/models/risk_classifier.joblib` e aplicado em batch via `ml/predict.py`, que atualiza as colunas `risk_score_ml` e `risk_label_ml` diretamente no mart.
-
----
-
-## Estrutura do Banco de Dados
-
-```
-raw.neo_feeds          — dados brutos de asteroides (JSONB)
-raw.solar_events       — dados brutos de eventos solares (JSONB)
-staging.stg_asteroids  — asteroides normalizados
-staging.stg_solar_events — eventos solares normalizados
-mart.mart_asteroids    — asteroides enriquecidos com score de risco
-mart.mart_solar_events — eventos solares enriquecidos
-```
+The trained model (`risk_classifier.joblib`) is applied in batch daily via `ml/predict.py`, updating `risk_score_ml` and `risk_label_ml` in the mart layer.
 
 ---
 
-## Testes
+## Database Schema
+raw.neo_feeds              — raw asteroid data (JSONB)
+raw.solar_events           — raw solar event data (JSONB)
+staging.stg_asteroids      — normalized asteroids
+staging.stg_solar_events   — normalized solar events
+mart.mart_asteroids        — enriched asteroids with ML risk scores
+mart.mart_solar_events     — enriched solar events
 
+---
+
+## Local Development
+
+### Prerequisites
+
+- Docker and Docker Compose
+- Python 3.11+
+- dbt Core
+- NASA API key — get one free at [api.nasa.gov](https://api.nasa.gov/)
+
+### Setup
 ```bash
-# Dashboard (Vitest)
-cd dashboard
-npm test
+git clone https://github.com/alexarnoni/astraea.git
+cd astraea
+
+cp .env.example .env
+# Fill in your credentials in .env
+```
+```env
+POSTGRES_USER=astraea
+POSTGRES_PASSWORD=your_password
+POSTGRES_DB=astraea
+DATABASE_URL=postgresql://astraea:your_password@db:5432/astraea
+NASA_API_KEY=your_nasa_api_key
+```
+
+### Run
+```bash
+# Start PostgreSQL, collector and API
+docker-compose up --build
+
+# Run dbt transformations
+cd dbt/astraea
+dbt run
+dbt test
+
+# Train the ML model (run from WSL2 on Windows)
+python ml/train.py
+
+# Run batch scoring
+python ml/predict.py
+```
+
+> **Windows users:** run ML scripts from WSL2 with `DATABASE_URL` set as an environment variable. `psycopg2` has encoding issues on native Windows (CP1252).
+
+### Tests
+```bash
+# API (includes rate limiting tests)
+cd api
+pip install -r requirements.txt
+python -m pytest tests/ -v
 
 # ML
 cd ml
@@ -185,13 +183,40 @@ pytest tests/
 
 ---
 
-## Fontes de Dados
+## Project Structure
+astraea/
+├── collector/          # Data ingestion (NeoWs + DONKI)
+├── dbt/astraea/        # dbt models: staging + mart layers
+├── ml/                 # Model training, scoring, and tests
+├── api/                # FastAPI application and endpoints
+├── dashboard/          # Vanilla JS frontend
+├── scripts/            # Database initialization SQL
+├── notebooks/          # Exploratory analysis
+├── docs/               # Assets (screenshots, diagrams)
+├── docker-compose.yml
+└── .env.example
+
+---
+
+## Roadmap
+
+| Version | Focus |
+|---|---|
+| **v1.1** | SSL auto-renewal, rate limiting, solar event detail page, date filters |
+| **v1.2** | 12-month backfill (~5,000 objects), automated ML retraining, GitHub Actions |
+| **v1.3** | Historical dashboard with Chart.js, full orbital data, multi-pass comparison |
+| **v1.4** | 2D orbit visualization (D3.js), email alerts for high-risk events |
+| **v3.0** | Airflow migration, ESA NEO + Minor Planet Center integration |
+
+---
+
+## Data Sources
 
 - [NASA NeoWs](https://api.nasa.gov/neo/rest/v1/feed) — Near Earth Object Web Service
 - [NASA DONKI](https://api.nasa.gov/DONKI/) — Space Weather Database Of Notifications, Knowledge, Information
 
 ---
 
-## Licença
+## License
 
 MIT
