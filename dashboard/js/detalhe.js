@@ -139,7 +139,7 @@ function renderMetricCards(asteroid) {
     : "—";
 
   const scoreDisplay = asteroid.risk_score_ml != null
-    ? `${Math.round(asteroid.risk_score_ml * 100)}%`
+    ? `${Math.round(asteroid.risk_score_ml * 100)}% de confiança`
     : "—";
 
   const cards = [
@@ -171,7 +171,7 @@ function renderMetricCards(asteroid) {
     [
       `${scoreDisplay} ${asteroid.risk_label_ml ? renderRiskBadge(asteroid.risk_label_ml) : ""}`,
       "Score ML",
-      "Score de risco calculado por modelo de machine learning treinado com dados históricos da NASA.",
+      "Confiança do modelo de machine learning na classificação de risco, treinado com dados históricos da NASA.",
     ],
     [
       asteroid.orbit_class ?? "—",
@@ -305,18 +305,24 @@ function renderMLPanel(asteroid) {
     return;
   }
 
-  const score = Math.round(asteroid.risk_score_ml * 100);
+  const confidence = Math.round(asteroid.risk_score_ml * 100);
   const label = (asteroid.risk_label_ml || "").toLowerCase();
+  const isUncertain = confidence < 50;
+  const scoreColor = isUncertain ? "#f59e0b" : "var(--text)";
 
-  // marker position: baixo=0-33%, médio=33-66%, alto=66-100%
-  let markerPct = score;
+  const markerByLabel = { baixo: 16, "médio": 50, alto: 84 };
+  const markerPct = markerByLabel[label] ?? 50;
 
   container.innerHTML = `<div class="ml-panel">
   <p class="section-label">análise de risco — modelo ml</p>
   <div class="ml-panel__header" style="margin-bottom:0.75rem">
-    <span class="ml-panel__score" style="font-size:2.5rem">${score}%</span>
+    <span class="ml-panel__score" style="font-size:2.5rem;color:${scoreColor}">${confidence}%</span>
+    <span style="font-size:0.85rem;color:var(--muted);margin-left:0.5rem">confiança</span>
     ${renderRiskBadge(label)}
   </div>
+  <p style="font-size:0.9rem;color:var(--muted);margin-bottom:0.75rem">
+    O modelo classifica este objeto como <strong style="color:var(--text)">${label}</strong> com <strong style="color:${scoreColor}">${confidence}%</strong> de confiança.
+  </p>
   <div class="risk-scale-wrap">
     <div class="risk-scale">
       <div class="risk-scale__low"></div>
@@ -332,6 +338,7 @@ function renderMLPanel(asteroid) {
       <span>alto</span>
     </div>
   </div>
+  ${isUncertain ? `<p style="font-size:0.8rem;color:#f59e0b;margin-top:0.25rem">⚠ Classificação incerta — modelo com baixa confiança.</p>` : ""}
   <p style="font-size:0.8rem;color:var(--muted);margin-top:0.75rem;font-style:italic">
     ⚠ Este modelo não substitui avaliações oficiais da NASA.
   </p>

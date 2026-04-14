@@ -84,13 +84,14 @@ def run_scoring() -> None:
 
         X = df[FEATURE_COLUMNS]
 
-        # 5. Gerar risk_score_ml: probabilidade da classe 'alto'
-        alto_idx = list(model.classes_).index("alto")
+        #Novo predict
         probas = model.predict_proba(X)
-        risk_scores = probas[:, alto_idx]
+        predicted_classes = model.predict(X)
+        class_to_idx = {c: i for i, c in enumerate(model.classes_)}
+        risk_scores = [probas[i, class_to_idx[c]] for i, c in enumerate(predicted_classes)]
 
         # 6. Gerar risk_label_ml: classe predita
-        risk_labels = model.predict(X)
+        risk_labels = predicted_classes
 
         # 7. Garantir que as colunas existam na tabela
         conn.execute(text(

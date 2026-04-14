@@ -41,6 +41,7 @@ class SolarEventResponse(BaseModel):
     longitude: Optional[float] = None
     kp_index_max: Optional[float] = None
     note: Optional[str] = None
+    is_earth_directed: Optional[bool] = None
     intensity_label: Optional[str] = None
 
 

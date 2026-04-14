@@ -25,6 +25,7 @@ def _row_to_solar(row) -> SolarEventResponse:
         kp_index_max=float(row.kp_index_max) if row.kp_index_max is not None else None,
         note=row.note,
         intensity_label=row.intensity_label,
+        is_earth_directed=row.is_earth_directed,
     )
 
 
