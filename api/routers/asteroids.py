@@ -11,6 +11,14 @@ from limiter import limiter
 router = APIRouter()
 
 
+def _safe_get(row, attr, default=None):
+    """Safely get a column value from a row, returning default if column doesn't exist."""
+    try:
+        return getattr(row, attr)
+    except AttributeError:
+        return default
+
+
 def _row_to_asteroid(row) -> AsteroidResponse:
     return AsteroidResponse(
         neo_id=row.neo_id,
@@ -25,13 +33,13 @@ def _row_to_asteroid(row) -> AsteroidResponse:
         estimated_diameter_max_km=float(row.estimated_diameter_max_km) if row.estimated_diameter_max_km is not None else None,
         absolute_magnitude_h=float(row.absolute_magnitude_h) if row.absolute_magnitude_h is not None else None,
         is_potentially_hazardous=row.is_potentially_hazardous,
-        risk_label=row.risk_label,
-        risk_score_ml=float(row.risk_score_ml) if row.risk_score_ml is not None else None,
-        risk_label_ml=row.risk_label_ml,
-        orbit_class=row.orbit_class,
-        is_sentry_object=row.is_sentry_object,
-        first_observation_date=str(row.first_observation_date) if row.first_observation_date is not None else None,
-        nasa_jpl_url=row.nasa_jpl_url,
+        risk_label=_safe_get(row, "risk_label"),
+        risk_score_ml=float(v) if (v := _safe_get(row, "risk_score_ml")) is not None else None,
+        risk_label_ml=_safe_get(row, "risk_label_ml"),
+        orbit_class=_safe_get(row, "orbit_class"),
+        is_sentry_object=_safe_get(row, "is_sentry_object"),
+        first_observation_date=str(v) if (v := _safe_get(row, "first_observation_date")) is not None else None,
+        nasa_jpl_url=_safe_get(row, "nasa_jpl_url"),
     )
 
 
