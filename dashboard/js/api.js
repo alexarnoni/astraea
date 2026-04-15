@@ -31,12 +31,14 @@ export async function fetchUpcoming() {
   return apiFetch("/v1/asteroids/upcoming");
 }
 
-export async function fetchAsteroids({ limit, offset, hazardous, risk_label } = {}) {
+export async function fetchAsteroids({ limit, offset, hazardous, risk_label, start_date, end_date } = {}) {
   const params = new URLSearchParams();
   if (limit != null) params.append("limit", limit);
   if (offset != null) params.append("offset", offset);
   if (hazardous != null) params.append("hazardous", hazardous);
   if (risk_label != null) params.append("risk_label", risk_label);
+  if (start_date != null) params.append("start_date", start_date);
+  if (end_date != null) params.append("end_date", end_date);
   const qs = params.toString();
   return apiFetch("/v1/asteroids" + (qs ? "?" + qs : ""));
 }
@@ -56,4 +58,8 @@ export async function fetchSolarEvents({ limit, offset, event_type } = {}) {
 
 export async function fetchEarthDirected() {
   return apiFetch("/v1/solar-events/earth-directed");
+}
+
+export async function fetchSolarEvent(eventId){
+  return apiFetch(`/v1/solar-events/${eventId}`);
 }

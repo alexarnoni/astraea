@@ -29,6 +29,14 @@
       <label class="filter-checkbox">
         <input type="checkbox" id="hazardous-check" /> Apenas perigosos
       </label>
+      <label class="filter-checkbox" style="gap:0.3rem">
+        <span>De:</span>
+        <input type="date" id="start-date" style="background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--font-mono);font-size:0.75rem;padding:0.3em 0.5em" />
+      </label>
+      <label class="filter-checkbox" style="gap:0.3rem">
+        <span>Até:</span>
+        <input type="date" id="end-date" style="background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--font-mono);font-size:0.75rem;padding:0.3em 0.5em" />
+      </label>
     </div>
     <div id="asteroids-table"></div>
     <div class="pagination" id="pagination">

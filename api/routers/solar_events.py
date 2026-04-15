@@ -1,6 +1,6 @@
 from datetime import date
 from typing import List, Optional
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, HTTPException
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -75,3 +75,12 @@ def earth_directed_events(request: Request, db: Session = Depends(get_db)):
     """)
     rows = db.execute(sql).fetchall()
     return [_row_to_solar(r) for r in rows]
+
+@router.get("/solar-events/{event_id}", response_model=SolarEventResponse)
+@limiter.limit("60/minute")
+def get_solar_event(request: Request, event_id: str, db: Session = Depends(get_db)):
+    sql = text("SELECT * FROM mart.mart_solar_events WHERE event_id = :event_id")
+    row = db.execute(sql, {"event_id": event_id}).fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Solar event not found")
+    return _row_to_solar(row)

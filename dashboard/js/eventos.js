@@ -52,7 +52,8 @@ function renderCard(ev) {
     ? "Ejeção de massa coronal — explosão solar que lança plasma para o espaço"
     : "Tempestade geomagnética — perturbação no campo magnético da Terra";
 
-  return `<div class="event-card">
+  return `<a href="detalhe-evento.html?id=${ev.event_id}" style="text-decoration:none;color:inherit;cursor:pointer;display:block">
+<div class="event-card">
   <div class="event-card__header">
     <div style="display:flex;align-items:center;gap:0.5rem">
       ${typeBadge}
@@ -64,7 +65,8 @@ function renderCard(ev) {
   ${kpField}
   ${noteField}
   <p style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;font-style:italic">${explainer}</p>
-</div>`;
+</div>
+</a>`;
 }
 
 // all events cached after first load

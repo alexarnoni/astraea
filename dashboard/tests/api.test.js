@@ -5,13 +5,19 @@ import fc from "fast-check";
 // We need to test the URL construction logic without actually calling fetch.
 // Extract the query string building logic for testing.
 
-function buildAsteroidsQuery({ limit, offset, hazardous, risk_label } = {}) {
+function buildAsteroidsQuery({ limit, offset, hazardous, risk_label, start_date, end_date } = {}) {
   const params = new URLSearchParams();
   if (limit != null) params.append("limit", limit);
   if (offset != null) params.append("offset", offset);
   if (hazardous != null) params.append("hazardous", hazardous);
   if (risk_label != null) params.append("risk_label", risk_label);
+  if (start_date != null) params.append("start_date", start_date);
+  if (end_date != null) params.append("end_date", end_date);
   return params.toString();
+}
+
+function buildSolarEventUrl(eventId) {
+  return `/v1/solar-events/${eventId}`;
 }
 
 function buildSolarEventsQuery({ limit, offset, event_type } = {}) {

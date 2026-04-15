@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASTRAEA — Detalhe do Evento Solar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .back-btn {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.5em 1em;
+      text-decoration: none;
+      transition: all 0.2s;
+      margin-top: 2rem;
+    }
+    .back-btn:hover {
+      color: var(--text);
+      border-color: var(--accent);
+      text-decoration: none;
+    }
+    .detail-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    .detail-field {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+    }
+    .detail-field:last-child { border-bottom: none; }
+    .detail-field__label {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .detail-field__value {
+      font-family: var(--font-mono);
+      color: var(--text);
+    }
+    .note-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin-top: 1.5rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-style: italic;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <a href="index.html" class="nav__logo">ASTRAEA</a>
+    <ul class="nav__links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="asteroides.html">Asteroides</a></li>
+      <li><a href="eventos.html" class="active">Eventos Solares</a></li>
+      <li><a href="sobre.html">Sobre</a></li>
+    </ul>
+  </nav>
+  <main class="page-content">
+    <nav class="breadcrumb" aria-label="Navegação estrutural">
+      <a href="index.html">Visão geral</a>
+      <span class="breadcrumb__sep" aria-hidden="true">›</span>
+      <a href="eventos.html">Eventos Solares</a>
+      <span class="breadcrumb__sep" aria-hidden="true">›</span>
+      <span class="breadcrumb__current" id="breadcrumb-name">—</span>
+    </nav>
+
+    <div id="event-hero"></div>
+    <div id="event-details"></div>
+    <div id="event-note"></div>
+    <div id="donki-link" style="margin-top:1.5rem"></div>
+    <div><a href="eventos.html" class="back-btn">← Voltar para eventos solares</a></div>
+  </main>
+  <footer class="footer">
+    <p>ASTRAEA — monitoramento de objetos próximos à Terra &amp; eventos solares</p>
+    <p>dados: <a href="https://api.nasa.gov/" target="_blank" rel="noopener">NASA NeoWs &amp; DONKI</a> · <a href="https://github.com/alexarnoni/astraea" target="_blank" rel="noopener">GitHub</a></p>
+  </footer>
+  <nav class="ast-bottom-nav" aria-label="Navegação mobile">
+    <a href="index.html" class="ast-bottom-nav-item">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 9.5L10 3l7 6.5V17a1 1 0 01-1 1h-4v-4H8v4H4a1 1 0 01-1-1V9.5z"/></svg>
+      <span>Home</span>
+    </a>
+    <a href="asteroides.html" class="ast-bottom-nav-item">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="2"/><path d="M10 3v2M10 15v2M3 10h2M15 10h2"/></svg>
+      <span>Asteroides</span>
+    </a>
+    <a href="eventos.html" class="ast-bottom-nav-item active">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M11 3L5 11h5l-1 6 6-8h-5l1-6z"/></svg>
+      <span>Eventos</span>
+    </a>
+    <a href="sobre.html" class="ast-bottom-nav-item">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 9v5M10 7v.5"/></svg>
+      <span>Sobre</span>
+    </a>
+  </nav>
+  <script type="module" src="js/detalhe-evento.js"></script>
+</body>
+</html>

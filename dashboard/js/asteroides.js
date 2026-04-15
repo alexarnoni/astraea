@@ -26,11 +26,15 @@ async function loadAsteroids() {
   showSpinner(tableEl);
 
   try {
+    const startDateInput = document.getElementById("start-date");
+    const endDateInput = document.getElementById("end-date");
     const data = await fetchAsteroids({
       limit: LIMIT,
       offset: currentOffset,
       risk_label: currentRisk,
       hazardous: currentHazardous,
+      start_date: startDateInput?.value || null,
+      end_date: endDateInput?.value || null,
     });
     renderTable(data);
     updatePagination(data.length);
@@ -115,6 +119,16 @@ document.addEventListener("DOMContentLoaded", () => {
       currentOffset = 0;
       loadAsteroids();
     });
+  }
+
+  // Date filters
+  const startDateInput = document.getElementById("start-date");
+  const endDateInput = document.getElementById("end-date");
+  if (startDateInput) {
+    startDateInput.addEventListener("change", () => { currentOffset = 0; loadAsteroids(); });
+  }
+  if (endDateInput) {
+    endDateInput.addEventListener("change", () => { currentOffset = 0; loadAsteroids(); });
   }
 
   // Pagination

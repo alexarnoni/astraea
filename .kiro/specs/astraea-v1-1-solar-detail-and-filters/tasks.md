@@ -20,8 +20,8 @@ Implementação incremental das três funcionalidades da v1.1: (1) endpoint de d
     - Mínimo 100 iterações
     - **Valida: Requisitos 1.1, 1.4**
 
-- [ ] 2. Backend — Endpoint de detalhe de evento solar
-  - [ ] 2.1 Criar endpoint `GET /v1/solar-events/{event_id}` em `api/routers/solar_events.py`
+- [x] 2. Backend — Endpoint de detalhe de evento solar
+  - [x] 2.1 Criar endpoint `GET /v1/solar-events/{event_id}` em `api/routers/solar_events.py`
     - Seguir o padrão de `GET /v1/asteroids/{neo_id}` em `asteroids.py`
     - Query parametrizada: `SELECT * FROM mart.mart_solar_events WHERE event_id = :event_id`
     - Retornar 404 com `{"detail": "Solar event not found"}` quando não encontrado
@@ -32,15 +32,15 @@ Implementação incremental das três funcionalidades da v1.1: (1) endpoint de d
     - Testar retorno 404 para `event_id` inexistente
     - _Requisitos: 1.2_
 
-- [ ] 3. Checkpoint — Verificar backend
+- [x] 3. Checkpoint — Verificar backend
   - Garantir que todos os testes passam, perguntar ao usuário se houver dúvidas.
 
-- [ ] 4. Frontend — Função `fetchSolarEvent` e suporte a filtros de data em `api.js`
-  - [ ] 4.1 Adicionar função `fetchSolarEvent(eventId)` em `dashboard/js/api.js`
+- [x] 4. Frontend — Função `fetchSolarEvent` e suporte a filtros de data em `api.js`
+  - [x] 4.1 Adicionar função `fetchSolarEvent(eventId)` em `dashboard/js/api.js`
     - Exportar função que chama `apiFetch(\`/v1/solar-events/${eventId}\`)`
     - Seguir o padrão de `fetchAsteroid(neo_id)`
     - _Requisitos: 3.1, 3.2_
-  - [ ] 4.2 Adicionar suporte a `start_date` e `end_date` em `fetchAsteroids` em `dashboard/js/api.js`
+  - [x] 4.2 Adicionar suporte a `start_date` e `end_date` em `fetchAsteroids` em `dashboard/js/api.js`
     - Desestruturar `start_date` e `end_date` dos parâmetros
     - Adicionar ao `URLSearchParams` quando não-nulos
     - _Requisitos: 5.2, 5.5_
@@ -57,15 +57,15 @@ Implementação incremental das três funcionalidades da v1.1: (1) endpoint de d
     - Mínimo 100 iterações com `fast-check`
     - **Valida: Requisitos 5.2, 5.4, 5.5**
 
-- [ ] 5. Frontend — Página de detalhe de evento solar
-  - [ ] 5.1 Criar `dashboard/detalhe-evento.html`
+- [x] 5. Frontend — Página de detalhe de evento solar
+  - [x] 5.1 Criar `dashboard/detalhe-evento.html`
     - Seguir o padrão de `detalhe.html`: nav, breadcrumb, footer, bottom nav mobile
     - Breadcrumb: `Visão geral › Eventos Solares › {event_type}`
     - Containers: `#event-hero`, `#event-details`, `#event-note`, `#donki-link`
     - Carregar `js/detalhe-evento.js` como módulo ES
     - Botão "← Voltar para eventos solares" com link para `eventos.html`
     - _Requisitos: 2.1, 2.12, 2.13_
-  - [ ] 5.2 Criar `dashboard/js/detalhe-evento.js`
+  - [x] 5.2 Criar `dashboard/js/detalhe-evento.js`
     - Extrair `id` da query string; se ausente, redirecionar para `eventos.html`
     - Chamar `fetchSolarEvent(id)` de `api.js`
     - Renderizar badge de tipo (CME/GST) com `typeBadgeStyle` (azul CME, âmbar GST)
@@ -78,24 +78,24 @@ Implementação incremental das três funcionalidades da v1.1: (1) endpoint de d
     - Importar `showSpinner`, `showError`, `setActiveNav` de `ui.js`
     - _Requisitos: 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10, 2.11_
 
-- [ ] 6. Checkpoint — Verificar página de detalhe de evento solar
+- [x] 6. Checkpoint — Verificar página de detalhe de evento solar
   - Garantir que todos os testes passam, perguntar ao usuário se houver dúvidas.
 
-- [ ] 7. Frontend — Cards clicáveis e filtros de data
-  - [ ] 7.1 Tornar cards de eventos clicáveis em `dashboard/js/eventos.js`
+- [x] 7. Frontend — Cards clicáveis e filtros de data
+  - [x] 7.1 Tornar cards de eventos clicáveis em `dashboard/js/eventos.js`
     - Envolver cada card em `<a href="detalhe-evento.html?id=${ev.event_id}">` com `text-decoration:none;color:inherit;cursor:pointer`
     - _Requisitos: 4.1, 4.2_
-  - [ ] 7.2 Adicionar campos de filtro de data em `dashboard/asteroides.html`
+  - [x] 7.2 Adicionar campos de filtro de data em `dashboard/asteroides.html`
     - Adicionar dois `<input type="date">` (`#start-date` e `#end-date`) na div `#filters`
     - Labels "De:" e "Até:" seguindo o padrão visual dos filtros existentes
     - _Requisitos: 5.1_
-  - [ ] 7.3 Implementar lógica de filtro de data em `dashboard/js/asteroides.js`
+  - [x] 7.3 Implementar lógica de filtro de data em `dashboard/js/asteroides.js`
     - Ler valores de `#start-date` e `#end-date`
     - Passar `start_date` e `end_date` para `fetchAsteroids` no `loadAsteroids`
     - Adicionar event listeners `change` nos inputs que resetam `currentOffset = 0` e chamam `loadAsteroids()`
     - _Requisitos: 5.2, 5.3, 5.4_
 
-- [ ] 8. Frontend — Testes de propriedade da página de detalhe
+- [x] 8. Frontend — Testes de propriedade da página de detalhe
   - [ ]* 8.1 Escrever teste de propriedade para badge de tipo
     - **Propriedade 2: Badge de tipo renderiza estilo correto**
     - Criar `dashboard/tests/detalhe-evento.test.js`
@@ -123,7 +123,7 @@ Implementação incremental das três funcionalidades da v1.1: (1) endpoint de d
     - Mínimo 100 iterações com `fast-check`
     - **Valida: Requisitos 4.1**
 
-- [ ] 9. Frontend — Testes unitários
+- [x] 9. Frontend — Testes unitários
   - [ ]* 9.1 Escrever teste unitário para redirecionamento quando `id` ausente
     - Verificar que `detalhe-evento.js` redireciona para `eventos.html` quando o parâmetro `id` não está na URL
     - _Requisitos: 2.3_
@@ -137,7 +137,7 @@ Implementação incremental das três funcionalidades da v1.1: (1) endpoint de d
     - Verificar que `currentOffset` é resetado para 0 quando o valor de um campo de data é alterado
     - _Requisitos: 5.3_
 
-- [ ] 10. Checkpoint final — Verificar todos os testes
+- [x] 10. Checkpoint final — Verificar todos os testes
   - Garantir que todos os testes passam, perguntar ao usuário se houver dúvidas.
 
 ## Notas
