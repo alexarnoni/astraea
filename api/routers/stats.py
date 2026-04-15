@@ -12,16 +12,36 @@ router = APIRouter()
 @router.get("/stats/summary", response_model=StatsResponse)
 @limiter.limit("60/minute")
 def stats_summary(request: Request, db: Session = Depends(get_db)):
-    ast = db.execute(text("""
-        SELECT
-            COUNT(*) AS total,
-            COUNT(*) FILTER (WHERE is_potentially_hazardous = true) AS hazardous,
-            COUNT(*) FILTER (WHERE risk_label_ml ILIKE 'alto') AS high_risk,
-            COUNT(*) FILTER (WHERE risk_label_ml ILIKE 'médio') AS medium_risk,
-            COUNT(*) FILTER (WHERE risk_label_ml ILIKE 'baixo') AS low_risk,
-            MIN(miss_distance_lunar) AS closest_lunar
-        FROM mart.mart_asteroids
-    """)).fetchone()
+    # Check which columns exist in mart_asteroids
+    cols = db.execute(text("""
+        SELECT column_name FROM information_schema.columns
+        WHERE table_schema = 'mart' AND table_name = 'mart_asteroids'
+    """)).fetchall()
+    col_names = {r[0] for r in cols}
+    has_ml = "risk_label_ml" in col_names
+
+    if has_ml:
+        ast = db.execute(text("""
+            SELECT
+                COUNT(*) AS total,
+                COUNT(*) FILTER (WHERE is_potentially_hazardous = true) AS hazardous,
+                COUNT(*) FILTER (WHERE risk_label_ml ILIKE 'alto') AS high_risk,
+                COUNT(*) FILTER (WHERE risk_label_ml ILIKE 'médio') AS medium_risk,
+                COUNT(*) FILTER (WHERE risk_label_ml ILIKE 'baixo') AS low_risk,
+                MIN(miss_distance_lunar) AS closest_lunar
+            FROM mart.mart_asteroids
+        """)).fetchone()
+    else:
+        ast = db.execute(text("""
+            SELECT
+                COUNT(*) AS total,
+                COUNT(*) FILTER (WHERE is_potentially_hazardous = true) AS hazardous,
+                0 AS high_risk,
+                0 AS medium_risk,
+                0 AS low_risk,
+                MIN(miss_distance_lunar) AS closest_lunar
+            FROM mart.mart_asteroids
+        """)).fetchone()
 
     closest_name = None
     if ast.closest_lunar is not None:
