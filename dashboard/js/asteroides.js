@@ -33,7 +33,7 @@ async function loadAsteroids() {
       offset: currentOffset,
       risk_label: currentRisk,
       hazardous: currentHazardous,
-      start_date: startDateInput?.value || null,
+      start_date: startDateInput?.value || new Date().toISOString().split("T")[0],
       end_date: endDateInput?.value || null,
     });
     renderTable(data);
