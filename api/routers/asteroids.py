@@ -65,17 +65,17 @@ def list_asteroids(
         filters.append("risk_label_ml ILIKE :risk_label")
         params["risk_label"] = risk_label
     if start_date is not None:
-        filters.append("feed_date >= :start_date")
+        filters.append("close_approach_date >= :start_date")
         params["start_date"] = start_date
     if end_date is not None:
-        filters.append("feed_date <= :end_date")
+        filters.append("close_approach_date <= :end_date")
         params["end_date"] = end_date
 
     where = ("WHERE " + " AND ".join(filters)) if filters else ""
     sql = text(f"""
         SELECT * FROM mart.mart_asteroids
         {where}
-        ORDER BY miss_distance_lunar ASC NULLS LAST
+        ORDER BY close_approach_date ASC, miss_distance_lunar ASC NULLS LAST
         LIMIT :limit OFFSET :offset
     """)
     rows = db.execute(sql, params).fetchall()
