@@ -1,7 +1,28 @@
 // Feature: asteroid-new-fields — detalhe.js property tests
 // Properties 4, 5, 6, 7, 8
-import { describe, it } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import fc from "fast-check";
+
+// ─── Mock browser globals and module deps before importing detalhe.js ──────────
+vi.stubGlobal("location", { search: "?id=1", replace: vi.fn() });
+vi.stubGlobal("document", {
+  addEventListener: vi.fn(),
+  getElementById: vi.fn(() => null),
+  title: "",
+  querySelectorAll: vi.fn(() => []),
+});
+vi.mock("../js/api.js", () => ({ fetchAsteroid: vi.fn() }));
+vi.mock("../js/ui.js", () => ({
+  renderRiskBadge: vi.fn(() => ""),
+  renderMetricCard: vi.fn(() => ""),
+  showSpinner: vi.fn(),
+  showError: vi.fn(),
+  setActiveNav: vi.fn(),
+  formatDate: vi.fn((d) => d || "—"),
+  formatNumber: vi.fn((n) => String(n ?? "—")),
+}));
+
+const { normalizeRiskClass, renderMLPanel, renderMetricCards: renderMetricCardsReal } = await import("../js/detalhe.js");
 
 // ─── Funções extraídas para teste (espelham a lógica de detalhe.js) ────────────
 
@@ -157,6 +178,258 @@ describe("renderJPLLink — URL selection", () => {
             html.includes('target="_blank"') &&
             html.includes('rel="noopener"')
           );
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+});
+
+
+// ─── normalizeRiskClass unit tests ────────────────────────────────────────────
+
+describe("normalizeRiskClass", () => {
+  it("normalizes 'médio' to 'medio'", () => {
+    expect(normalizeRiskClass("médio")).toBe("medio");
+  });
+
+  it("keeps 'medio' as 'medio'", () => {
+    expect(normalizeRiskClass("medio")).toBe("medio");
+  });
+
+  it("normalizes 'MÉDIO' to 'medio'", () => {
+    expect(normalizeRiskClass("MÉDIO")).toBe("medio");
+  });
+
+  it("normalizes 'Médio' to 'medio'", () => {
+    expect(normalizeRiskClass("Médio")).toBe("medio");
+  });
+
+  it("keeps 'baixo' as 'baixo'", () => {
+    expect(normalizeRiskClass("baixo")).toBe("baixo");
+  });
+
+  it("normalizes 'BAIXO' to 'baixo'", () => {
+    expect(normalizeRiskClass("BAIXO")).toBe("baixo");
+  });
+
+  it("keeps 'alto' as 'alto'", () => {
+    expect(normalizeRiskClass("alto")).toBe("alto");
+  });
+
+  it("normalizes 'ALTO' to 'alto'", () => {
+    expect(normalizeRiskClass("ALTO")).toBe("alto");
+  });
+
+  it("returns empty string for null/undefined", () => {
+    expect(normalizeRiskClass(null)).toBe("");
+    expect(normalizeRiskClass(undefined)).toBe("");
+  });
+});
+
+
+// ─── Property P6: MLPanel oculta seção quando probabilidade é null ─────────────
+
+describe("renderMLPanel — null handling", () => {
+  it("P6: para qualquer asteroide com pelo menos uma probabilidade null, HTML exibe indisponível e não contém barras", () => {
+    // Feature: ml-risk-probabilities, Property 6: MLPanel oculta seção quando probabilidade é null
+    // **Validates: Requirements 8.8**
+
+    // Generator: 3 values each either a float [0,1] or null, filtered so at least one is null
+    const arbNullableFloat = fc.oneof(
+      fc.float({ min: 0, max: 1, noNaN: true }),
+      fc.constant(null)
+    );
+
+    const arbProbasWithNull = fc
+      .tuple(arbNullableFloat, arbNullableFloat, arbNullableFloat)
+      .filter(([a, b, c]) => a === null || b === null || c === null);
+
+    const arbLabel = fc.constantFrom("baixo", "medio", "médio", "alto", null);
+
+    fc.assert(
+      fc.property(arbProbasWithNull, arbLabel, ([pBaixo, pMedio, pAlto], label) => {
+        // Set up a mock container for getElementById("ml-panel")
+        const container = { innerHTML: "" };
+        document.getElementById = vi.fn((id) => {
+          if (id === "ml-panel") return container;
+          return null;
+        });
+
+        const asteroid = {
+          risk_proba_baixo: pBaixo,
+          risk_proba_medio: pMedio,
+          risk_proba_alto: pAlto,
+          risk_label_ml: label,
+        };
+
+        renderMLPanel(asteroid);
+
+        const html = container.innerHTML;
+
+        // (a) Contains the unavailability message
+        expect(html).toContain("Análise de risco indisponível");
+
+        // (b) Does NOT contain probability bars
+        expect(html).not.toContain("proba-row");
+
+        // (c) Does NOT contain risk badge
+        expect(html).not.toContain("risk-badge");
+      }),
+      { numRuns: 100 }
+    );
+  });
+});
+
+// ─── Property P5: MLPanel renderiza distribuição completa ─────────────────────
+
+describe("renderMLPanel — distribuição completa", () => {
+  it("P5: para qualquer asteroide com 3 probabilidades não-nulas e risk_label_ml válido, HTML contém badge, frase e 3 barras", () => {
+    // Feature: ml-risk-probabilities, Property 5: MLPanel renderiza distribuição completa
+    // **Validates: Requirements 8.2, 8.3, 8.4, 8.6**
+
+    // Dirichlet-like generator: 3 random positive floats normalized to sum to 1.0
+    const arbProbas = fc
+      .tuple(
+        fc.integer({ min: 1, max: 1000 }),
+        fc.integer({ min: 1, max: 1000 }),
+        fc.integer({ min: 1, max: 1000 })
+      )
+      .map(([a, b, c]) => {
+        const sum = a + b + c;
+        return [a / sum, b / sum, c / sum];
+      });
+
+    const arbLabel = fc.constantFrom("baixo", "medio", "médio", "alto");
+
+    fc.assert(
+      fc.property(arbProbas, arbLabel, ([pBaixo, pMedio, pAlto], label) => {
+        // Set up a mock container for getElementById("ml-panel")
+        const container = { innerHTML: "" };
+        document.getElementById = vi.fn((id) => {
+          if (id === "ml-panel") return container;
+          return null;
+        });
+
+        const asteroid = {
+          risk_proba_baixo: pBaixo,
+          risk_proba_medio: pMedio,
+          risk_proba_alto: pAlto,
+          risk_label_ml: label,
+        };
+
+        renderMLPanel(asteroid);
+
+        const html = container.innerHTML;
+
+        // (a) Badge with the predicted class
+        const cls = normalizeRiskClass(label);
+        expect(html).toContain(`risk-badge risk-badge--${cls}`);
+
+        // (b) Phrase pattern: "Classificado como ... risco com ...% de probabilidade"
+        const probaMap = { baixo: pBaixo, medio: pMedio, alto: pAlto };
+        const predictedPct = Math.round(probaMap[cls] * 100);
+        expect(html).toContain("Classificado como");
+        expect(html).toContain(`${predictedPct}%`);
+        expect(html).toContain("de probabilidade");
+
+        // (c) Exactly 3 .proba-row elements
+        const probaRowCount = (html.match(/class="proba-row"/g) || []).length;
+        expect(probaRowCount).toBe(3);
+      }),
+      { numRuns: 100 }
+    );
+  });
+});
+
+
+// ─── Property P7: Eliminação do termo "confiança" ─────────────────────────────
+
+describe("renderMLPanel + renderMetricCards — eliminação de confiança", () => {
+  it("P7: para qualquer asteroide com dados válidos, a saída HTML não contém 'confiança'", () => {
+    // Feature: ml-risk-probabilities, Property 7: Eliminação do termo confiança
+    // **Validates: Requirements 8.9, 10.4, 12.1, 12.2, 12.3**
+
+    // Dirichlet-like generator: 3 random positive floats normalized to sum ≈ 1.0
+    const arbProbas = fc
+      .tuple(
+        fc.integer({ min: 1, max: 1000 }),
+        fc.integer({ min: 1, max: 1000 }),
+        fc.integer({ min: 1, max: 1000 })
+      )
+      .map(([a, b, c]) => {
+        const sum = a + b + c;
+        return [a / sum, b / sum, c / sum];
+      });
+
+    const arbLabel = fc.constantFrom("baixo", "medio", "médio", "alto");
+
+    // Generators for fields used by renderMetricCards
+    const arbMissDistanceLunar = fc.float({ min: Math.fround(0.01), max: Math.fround(100), noNaN: true });
+    const arbMissDistanceKm = fc.float({ min: Math.fround(1000), max: Math.fround(100000000), noNaN: true });
+    const arbVelocity = fc.float({ min: Math.fround(1), max: Math.fround(50), noNaN: true });
+    const arbDiameterMin = fc.float({ min: Math.fround(0.001), max: Math.fround(5), noNaN: true });
+    const arbDiameterMax = fc.float({ min: Math.fround(0.001), max: Math.fround(10), noNaN: true });
+    const arbMagnitude = fc.float({ min: Math.fround(10), max: Math.fround(35), noNaN: true });
+    const arbHazardous = fc.boolean();
+
+    fc.assert(
+      fc.property(
+        arbProbas,
+        arbLabel,
+        arbMissDistanceLunar,
+        arbMissDistanceKm,
+        arbVelocity,
+        arbDiameterMin,
+        arbDiameterMax,
+        arbMagnitude,
+        arbHazardous,
+        ([pBaixo, pMedio, pAlto], label, missLunar, missKm, vel, dMin, dMax, mag, hazardous) => {
+          // Set up mock containers for both panels
+          const mlContainer = { innerHTML: "" };
+          const metricContainer = { innerHTML: "" };
+          document.getElementById = vi.fn((id) => {
+            if (id === "ml-panel") return mlContainer;
+            if (id === "metric-cards") return metricContainer;
+            return null;
+          });
+
+          const asteroid = {
+            risk_proba_baixo: pBaixo,
+            risk_proba_medio: pMedio,
+            risk_proba_alto: pAlto,
+            risk_label_ml: label,
+            miss_distance_lunar: missLunar,
+            miss_distance_km: missKm,
+            relative_velocity_km_s: vel,
+            estimated_diameter_min_km: dMin,
+            estimated_diameter_max_km: dMax,
+            absolute_magnitude_h: mag,
+            is_potentially_hazardous: hazardous,
+            orbit_class: "Apollo",
+            first_observation_date: "2020-01-15",
+            close_approach_date: "2025-06-01",
+            name: "Test Asteroid",
+            nasa_jpl_url: null,
+            is_sentry_object: false,
+          };
+
+          // Call both render functions
+          renderMLPanel(asteroid);
+          renderMetricCardsReal(asteroid);
+
+          const mlHtml = mlContainer.innerHTML.toLowerCase();
+          const metricHtml = metricContainer.innerHTML.toLowerCase();
+
+          // Neither output should contain "confiança" (case-insensitive)
+          expect(mlHtml).not.toContain("confiança");
+          expect(metricHtml).not.toContain("confiança");
+
+          // Also check the NFD-decomposed form (confianca with combining accent)
+          const mlNormalized = mlHtml.normalize("NFD");
+          const metricNormalized = metricHtml.normalize("NFD");
+          expect(mlNormalized).not.toMatch(/confian[cç]a/i);
+          expect(metricNormalized).not.toMatch(/confian[cç]a/i);
         }
       ),
       { numRuns: 100 }

@@ -23,40 +23,6 @@
       border-color: var(--badge-alto-bg);
       box-shadow: 0 0 0 1px rgba(239,68,68,0.3);
     }
-    .risk-scale {
-      display: flex;
-      height: 8px;
-      border-radius: 4px;
-      overflow: hidden;
-      width: 100%;
-    }
-    .risk-scale__low  { flex: 1; background: var(--badge-baixo-bg); }
-    .risk-scale__mid  { flex: 1; background: var(--badge-medio-bg); }
-    .risk-scale__high { flex: 1; background: var(--badge-alto-bg); }
-    .risk-scale__marker {
-      position: relative;
-      width: 100%;
-      height: 8px;
-    }
-    .risk-scale__marker::after {
-      content: '';
-      position: absolute;
-      top: -2px;
-      width: 4px;
-      height: 12px;
-      background: var(--text);
-      border-radius: 2px;
-      transform: translateX(-50%);
-    }
-    .risk-scale-wrap { position: relative; }
-    .risk-scale-labels {
-      display: flex;
-      justify-content: space-between;
-      font-family: var(--font-mono);
-      font-size: 0.65rem;
-      color: var(--muted);
-      margin-top: 0.35rem;
-    }
     .hero__hazardous-badge {
       display: inline-block;
       padding: 0.3em 0.8em;

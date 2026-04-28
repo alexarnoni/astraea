@@ -79,8 +79,8 @@ Refatoração do pipeline de scoring ML para expor as três probabilidades compl
 - [x] 5. Checkpoint — Validar camada API
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 6. Atualizar frontend — CSS e JavaScript
-  - [ ] 6.1 Adicionar classes CSS de probabilidade em `dashboard/css/style.css`
+- [x] 6. Atualizar frontend — CSS e JavaScript
+  - [x] 6.1 Adicionar classes CSS de probabilidade em `dashboard/css/style.css`
     - Adicionar `.proba-row` (grid 3 colunas: 60px | 1fr | 50px), `.proba-row + .proba-row` (margin-top 12px)
     - Adicionar `.proba-row__label` (Space Mono, 0.7rem, uppercase, muted)
     - Adicionar `.proba-row__value` (Space Mono, 0.8rem, text-align right)
@@ -89,11 +89,11 @@ Refatoração do pipeline de scoring ML para expor as três probabilidades compl
     - Adicionar `.risk-badge`, `.risk-badge--baixo`, `.risk-badge--medio` (sem acento), `.risk-badge--alto`
     - _Requisitos: 9.1, 9.2, 9.3, 9.4, 9.5_
 
-  - [ ] 6.2a Implementar função utilitária `normalizeRiskClass(label)` em `dashboard/js/detalhe.js`
+  - [x] 6.2a Implementar função utilitária `normalizeRiskClass(label)` em `dashboard/js/detalhe.js`
     - Criar função que normaliza acentos via `String.normalize('NFD')` + regex, retornando sempre `'baixo'`, `'medio'` ou `'alto'` (sem acento)
     - Incluir teste unitário inline ou em `dashboard/tests/detalhe.test.js` verificando que `'médio'` → `'medio'`, `'medio'` → `'medio'`, `'MÉDIO'` → `'medio'`, etc.
 
-  - [ ] 6.2b Reescrever `renderMLPanel` em `dashboard/js/detalhe.js` usando `normalizeRiskClass`
+  - [x] 6.2b Reescrever `renderMLPanel` em `dashboard/js/detalhe.js` usando `normalizeRiskClass`
     - Toda construção de className (`.risk-badge--{classe}`, `.proba-bar-fill`) deve usar `normalizeRiskClass`
     - Se qualquer probabilidade for `null` → exibir "Análise de risco indisponível para este objeto"
     - Caso contrário: badge de risco, frase "Classificado como {classe} risco com {X}% de probabilidade", 3 barras `.proba-row`, disclaimer
@@ -101,29 +101,29 @@ Refatoração do pipeline de scoring ML para expor as três probabilidades compl
     - Usar "probabilidade" em toda a interface, sem nenhuma menção a "confiança"
     - _Requisitos: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.9, 12.1, 12.3_
 
-  - [ ] 6.3 Atualizar `renderMetricCards` em `dashboard/js/detalhe.js`
+  - [x] 6.3 Atualizar `renderMetricCards` em `dashboard/js/detalhe.js`
     - Substituir conteúdo do card "Score ML": exibir `Math.round(proba_da_classe_predita * 100)` + "% probabilidade" + badge
     - Atualizar tooltip para descrever probabilidade da classe predita
     - Remover toda menção a "confiança"
     - _Requisitos: 10.1, 10.2, 10.3, 10.4, 12.2_
 
-  - [ ] 6.4 Remover CSS inline obsoleto de `dashboard/detalhe.html`
+  - [x] 6.4 Remover CSS inline obsoleto de `dashboard/detalhe.html`
     - Remover regras `.risk-scale`, `.risk-scale__low`, `.risk-scale__mid`, `.risk-scale__high`, `.risk-scale__marker`, `.risk-scale-wrap`, `.risk-scale-labels` do bloco `<style>` inline
     - _Requisitos: 8.1_
 
-  - [ ]* 6.5 Escrever teste de propriedade P5: MLPanel renderiza distribuição completa
+  - [x]* 6.5 Escrever teste de propriedade P5: MLPanel renderiza distribuição completa
     - **Propriedade 5: MLPanel renderiza distribuição completa**
     - Para qualquer asteroide com 3 probabilidades não-nulas (somando ≈1.0) e `risk_label_ml` válido, o HTML contém badge, frase com porcentagem e 3 barras `.proba-row`
     - Usar `fast-check` com mínimo 100 exemplos em `dashboard/tests/detalhe.test.js`
     - **Valida: Requisitos 8.2, 8.3, 8.4, 8.6**
 
-  - [ ]* 6.6 Escrever teste de propriedade P6: MLPanel oculta seção quando probabilidade é null
+  - [x]* 6.6 Escrever teste de propriedade P6: MLPanel oculta seção quando probabilidade é null
     - **Propriedade 6: MLPanel oculta seção quando probabilidade é null**
     - Para qualquer asteroide com pelo menos uma probabilidade `null`, o HTML exibe "Análise de risco indisponível" e não contém barras
     - Usar `fast-check` com mínimo 100 exemplos
     - **Valida: Requisito 8.8**
 
-  - [ ]* 6.7 Escrever teste de propriedade P7: Eliminação do termo "confiança"
+  - [x]* 6.7 Escrever teste de propriedade P7: Eliminação do termo "confiança"
     - **Propriedade 7: Eliminação do termo confiança**
     - Para qualquer asteroide com dados válidos, a saída HTML de `renderMLPanel` e `renderMetricCards` não contém "confiança"
     - Usar `fast-check` com mínimo 100 exemplos

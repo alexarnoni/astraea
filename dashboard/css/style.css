@@ -998,3 +998,66 @@ p, li, td, th, label {
     grid-template-columns: 1fr;
   }
 }
+
+/* // probability bars & risk badges */
+.proba-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 50px;
+  align-items: center;
+  gap: 8px;
+}
+
+.proba-row + .proba-row {
+  margin-top: 12px;
+}
+
+.proba-row__label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.proba-row__value {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text);
+  text-align: right;
+}
+
+.proba-bar-track {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.proba-bar-fill {
+  height: 8px;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.risk-badge {
+  display: inline-block;
+  padding: 0.2em 0.6em;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.risk-badge--baixo {
+  background: #22c55e;
+}
+
+.risk-badge--medio {
+  background: #f59e0b;
+}
+
+.risk-badge--alto {
+  background: #ef4444;
+}

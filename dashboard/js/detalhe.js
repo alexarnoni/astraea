@@ -11,6 +11,12 @@ import {
   formatNumber,
 } from "./ui.js";
 
+// ─── Normalize Risk Class ───────────────────────────────────────────────────────
+
+export function normalizeRiskClass(label) {
+  return (label || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
 // ─── Extract ID ────────────────────────────────────────────────────────────────
 
 const neoId = new URLSearchParams(location.search).get("id");
@@ -125,7 +131,7 @@ function renderCountdownSection(asteroid) {
 
 // ─── Render Metric Cards ───────────────────────────────────────────────────────
 
-function renderMetricCards(asteroid) {
+export function renderMetricCards(asteroid) {
   const container = document.getElementById("metric-cards");
   if (!container) return;
 
@@ -138,8 +144,12 @@ function renderMetricCards(asteroid) {
     ? formatNumber(asteroid.relative_velocity_km_s * 3600, 0)
     : "—";
 
-  const scoreDisplay = asteroid.risk_score_ml != null
-    ? `${Math.round(asteroid.risk_score_ml * 100)}% de confiança`
+  const label = asteroid.risk_label_ml;
+  const cls = normalizeRiskClass(label);
+  const probaMap = { baixo: asteroid.risk_proba_baixo, medio: asteroid.risk_proba_medio, alto: asteroid.risk_proba_alto };
+  const predictedProba = probaMap[cls] ?? null;
+  const mlDisplay = predictedProba != null
+    ? `${Math.round(predictedProba * 100)}% probabilidade ${label ? renderRiskBadge(label) : ""}`
     : "—";
 
   const cards = [
@@ -169,9 +179,9 @@ function renderMetricCards(asteroid) {
       "Classificação oficial da NASA: indica se o objeto é potencialmente perigoso (PHA) com base em tamanho e distância.",
     ],
     [
-      `${scoreDisplay} ${asteroid.risk_label_ml ? renderRiskBadge(asteroid.risk_label_ml) : ""}`,
+      mlDisplay,
       "Score ML",
-      "Confiança do modelo de machine learning na classificação de risco, treinado com dados históricos da NASA.",
+      "Probabilidade atribuída pelo modelo de machine learning à classe de risco predita.",
     ],
     [
       asteroid.orbit_class ?? "—",
@@ -296,49 +306,47 @@ function renderPerspectiveSection(asteroid) {
 
 // ─── Render ML Panel ───────────────────────────────────────────────────────────
 
-function renderMLPanel(asteroid) {
+export function renderMLPanel(asteroid) {
   const container = document.getElementById("ml-panel");
   if (!container) return;
 
-  if (asteroid.risk_score_ml == null) {
-    container.innerHTML = `<p style="color:var(--muted);font-size:0.9rem">Score ML não disponível.</p>`;
+  const probaBaixo = asteroid.risk_proba_baixo;
+  const probaMedio = asteroid.risk_proba_medio;
+  const probaAlto = asteroid.risk_proba_alto;
+
+  if (probaBaixo == null || probaMedio == null || probaAlto == null) {
+    container.innerHTML = `<p style="color:var(--muted);font-size:0.9rem">Análise de risco indisponível para este objeto</p>`;
     return;
   }
 
-  const confidence = Math.round(asteroid.risk_score_ml * 100);
-  const label = (asteroid.risk_label_ml || "").toLowerCase();
-  const isUncertain = confidence < 50;
-  const scoreColor = isUncertain ? "#f59e0b" : "var(--text)";
+  const label = asteroid.risk_label_ml || "";
+  const cls = normalizeRiskClass(label);
 
-  const markerByLabel = { baixo: 16, "médio": 50, alto: 84 };
-  const markerPct = markerByLabel[label] ?? 50;
+  const probaMap = { baixo: probaBaixo, medio: probaMedio, alto: probaAlto };
+  const predictedProba = probaMap[cls] ?? 0;
+  const pct = Math.round(predictedProba * 100);
+
+  const colors = { baixo: "#22c55e", medio: "#f59e0b", alto: "#ef4444" };
+
+  const probaRow = (name, displayLabel, value) => {
+    const color = colors[name];
+    const w = Math.round(value * 100);
+    return `<div class="proba-row">
+    <span class="proba-row__label">${displayLabel}</span>
+    <div class="proba-bar-track"><div class="proba-bar-fill" style="width:${w}%;background:${color}"></div></div>
+    <span class="proba-row__value">${w}%</span>
+  </div>`;
+  };
 
   container.innerHTML = `<div class="ml-panel">
   <p class="section-label">análise de risco — modelo ml</p>
-  <div class="ml-panel__header" style="margin-bottom:0.75rem">
-    <span class="ml-panel__score" style="font-size:2.5rem;color:${scoreColor}">${confidence}%</span>
-    <span style="font-size:0.85rem;color:var(--muted);margin-left:0.5rem">confiança</span>
-    ${renderRiskBadge(label)}
-  </div>
+  <div style="margin-bottom:0.75rem"><span class="risk-badge risk-badge--${cls}">${label}</span></div>
   <p style="font-size:0.9rem;color:var(--muted);margin-bottom:0.75rem">
-    O modelo classifica este objeto como <strong style="color:var(--text)">${label}</strong> com <strong style="color:${scoreColor}">${confidence}%</strong> de confiança.
+    Classificado como <strong style="color:var(--text)">${label}</strong> risco com <strong style="color:var(--text)">${pct}%</strong> de probabilidade
   </p>
-  <div class="risk-scale-wrap">
-    <div class="risk-scale">
-      <div class="risk-scale__low"></div>
-      <div class="risk-scale__mid"></div>
-      <div class="risk-scale__high"></div>
-    </div>
-    <div style="position:relative;height:12px">
-      <div style="position:absolute;left:${markerPct}%;transform:translateX(-50%);top:0;width:4px;height:12px;background:var(--text);border-radius:2px"></div>
-    </div>
-    <div class="risk-scale-labels">
-      <span>baixo</span>
-      <span>médio</span>
-      <span>alto</span>
-    </div>
-  </div>
-  ${isUncertain ? `<p style="font-size:0.8rem;color:#f59e0b;margin-top:0.25rem">⚠ Classificação incerta — modelo com baixa confiança.</p>` : ""}
+  ${probaRow("baixo", "baixo", probaBaixo)}
+  ${probaRow("medio", "médio", probaMedio)}
+  ${probaRow("alto", "alto", probaAlto)}
   <p style="font-size:0.8rem;color:var(--muted);margin-top:0.75rem;font-style:italic">
     ⚠ Este modelo não substitui avaliações oficiais da NASA.
   </p>
