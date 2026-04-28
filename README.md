@@ -36,7 +36,7 @@ staging / mart layers
 │                 ▼
 └────────► [Dashboard]
 
-**Daily automation:** cron triggers data collection at 00:30 UTC → dbt transformations + ML scoring at 01:00 UTC.
+**Daily automation:** collector runs three ingestion jobs at 00:30, 00:35 and 00:40 UTC → cron triggers dbt transformations + ML scoring at 01:00 UTC.
 
 ---
 
@@ -74,6 +74,7 @@ Rate limit: 60 requests/minute per IP.
 | `GET` | `/asteroids/{neo_id}` | Full details for a specific asteroid |
 | `GET` | `/solar-events` | List solar events (CME, GST) with filters |
 | `GET` | `/solar-events/earth-directed` | Earth-directed coronal mass ejections |
+| `GET` | `/solar-events/{event_id}` | Full details for a specific solar event |
 | `GET` | `/stats/summary` | Aggregate statistics across all collected data |
 | `GET` | `/health` | API health check |
 
@@ -108,8 +109,6 @@ A **Random Forest classifier** trained on historical close approach data scores 
 | `diameter_avg_km` | Estimated average diameter in km |
 | `absolute_magnitude_h` | Absolute magnitude (H) |
 | `is_potentially_hazardous` | NASA potentially hazardous object flag |
-| `orbit_class` | Orbital classification group |
-| `is_sentry_object` | Listed on NASA Sentry impact monitoring system |
 
 The trained model (`risk_classifier.joblib`) is applied in batch daily via `ml/predict.py`, updating `risk_score_ml` and `risk_label_ml` in the mart layer.
 
@@ -176,6 +175,11 @@ cd api
 pip install -r requirements.txt
 python -m pytest tests/ -v
 
+# Dashboard (Vitest)
+cd dashboard
+npm install
+npm test
+
 # ML
 cd ml
 pytest tests/
@@ -202,7 +206,7 @@ astraea/
 
 | Version | Focus |
 |---|---|
-| **v1.1** | SSL auto-renewal, rate limiting, solar event detail page, date filters |
+| **v1.1** ✅ | Rate limiting, solar event detail page, date filters |
 | **v1.2** | 12-month backfill (~5,000 objects), automated ML retraining, GitHub Actions |
 | **v1.3** | Historical dashboard with Chart.js, full orbital data, multi-pass comparison |
 | **v1.4** | 2D orbit visualization (D3.js), email alerts for high-risk events |
