@@ -46,3 +46,6 @@ notebooks/.ipynb_checkpoints/
 
 # VS Code
 .vscode/
+
+# dbt profiles (contains credentials)
+dbt/profiles/
