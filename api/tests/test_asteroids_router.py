@@ -30,7 +30,9 @@ def make_row(**kwargs):
         absolute_magnitude_h=20.0,
         is_potentially_hazardous=False,
         risk_label="baixo",
-        risk_score_ml=0.1,
+        risk_proba_baixo=0.85,
+        risk_proba_medio=0.10,
+        risk_proba_alto=0.05,
         risk_label_ml="baixo",
         orbit_class=None,
         is_sentry_object=None,
@@ -79,3 +81,40 @@ def test_row_mapper_round_trip(orbit_class, is_sentry_object, first_observation_
         assert result.first_observation_date is None
     else:
         assert result.first_observation_date == str(first_observation_date)
+
+
+# Feature: ml-risk-probabilities — property test P4
+# Property 4: Round-trip do Row Mapper com probabilidades
+# Validates: Requirements 6.1, 6.2, 6.3, 6.5, 7.3
+
+proba_st = st.one_of(
+    st.none(),
+    st.floats(min_value=0.0, max_value=1.0, allow_nan=False, allow_infinity=False),
+)
+
+
+@given(
+    risk_proba_baixo=proba_st,
+    risk_proba_medio=proba_st,
+    risk_proba_alto=proba_st,
+)
+@settings(max_examples=100)
+def test_row_mapper_round_trip_probabilities(risk_proba_baixo, risk_proba_medio, risk_proba_alto):
+    """
+    Feature: ml-risk-probabilities, Property 4: Round-trip do Row Mapper com probabilidades
+    **Validates: Requirements 6.1, 6.2, 6.3, 6.5, 7.3**
+
+    Para qualquer combinação de (float | None) nos campos risk_proba_baixo,
+    risk_proba_medio, risk_proba_alto, _row_to_asteroid produz um AsteroidResponse
+    com os mesmos valores de probabilidade (float preservado, None preservado).
+    """
+    row = make_row(
+        risk_proba_baixo=risk_proba_baixo,
+        risk_proba_medio=risk_proba_medio,
+        risk_proba_alto=risk_proba_alto,
+    )
+    result = _row_to_asteroid(row)
+
+    assert result.risk_proba_baixo == risk_proba_baixo
+    assert result.risk_proba_medio == risk_proba_medio
+    assert result.risk_proba_alto == risk_proba_alto

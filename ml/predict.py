@@ -8,6 +8,7 @@ Uso:
 
 import os
 import sys
+import unicodedata
 from pathlib import Path
 
 import joblib
@@ -36,6 +37,36 @@ def _make_engine(database_url: str):
     url = database_url.replace("postgresql://", "postgresql+pg8000://", 1)
     url = url.replace("postgresql+psycopg2://", "postgresql+pg8000://", 1)
     return create_engine(url)
+
+
+def _validate_and_map_classes(model) -> dict[str, int]:
+    """Retorna mapeamento {'baixo': idx, 'medio': idx, 'alto': idx}.
+
+    Normaliza acentos de ``model.classes_`` para encontrar os índices
+    corretos independentemente de o modelo retornar 'médio' ou 'medio'.
+    Lança ``ValueError`` se não houver exatamente 3 classes mapeáveis.
+    """
+    canonical = {"baixo", "medio", "alto"}
+    mapping: dict[str, int] = {}
+
+    for idx, cls in enumerate(model.classes_):
+        # Remove acentos: NFD decompõe, depois filtra combining characters
+        normalized = "".join(
+            ch
+            for ch in unicodedata.normalize("NFD", str(cls).lower())
+            if unicodedata.category(ch) != "Mn"
+        )
+        if normalized in canonical:
+            mapping[normalized] = idx
+
+    if set(mapping.keys()) != canonical:
+        found = list(model.classes_)
+        raise ValueError(
+            f"Esperadas exatamente 3 classes mapeáveis (baixo, medio, alto), "
+            f"mas model.classes_ contém: {found}"
+        )
+
+    return mapping
 
 
 def run_scoring() -> None:
@@ -67,7 +98,7 @@ def run_scoring() -> None:
     # 3. Consultar dados do mart
     engine = _make_engine(database_url)
     query = text(
-        "SELECT neo_id, miss_distance_lunar, relative_velocity_km_s, "
+        "SELECT neo_id, feed_date, miss_distance_lunar, relative_velocity_km_s, "
         "estimated_diameter_min_km, estimated_diameter_max_km, "
         "absolute_magnitude_h, is_potentially_hazardous "
         "FROM mart.mart_asteroids"
@@ -84,41 +115,46 @@ def run_scoring() -> None:
 
         X = df[FEATURE_COLUMNS]
 
-        #Novo predict
+        # 5. Validar classes e obter índices
+        class_map = _validate_and_map_classes(model)
+        idx_baixo = class_map["baixo"]
+        idx_medio = class_map["medio"]
+        idx_alto = class_map["alto"]
+
         probas = model.predict_proba(X)
         predicted_classes = model.predict(X)
-        class_to_idx = {c: i for i, c in enumerate(model.classes_)}
-        risk_scores = [probas[i, class_to_idx[c]] for i, c in enumerate(predicted_classes)]
 
-        # 6. Gerar risk_label_ml: classe predita
+        risk_proba_baixo = probas[:, idx_baixo]
+        risk_proba_medio = probas[:, idx_medio]
+        risk_proba_alto = probas[:, idx_alto]
         risk_labels = predicted_classes
 
-        # 7. Garantir que as colunas existam na tabela
-        conn.execute(text(
-            "ALTER TABLE mart.mart_asteroids "
-            "ADD COLUMN IF NOT EXISTS risk_score_ml NUMERIC(6,4)"
-        ))
-        conn.execute(text(
-            "ALTER TABLE mart.mart_asteroids "
-            "ADD COLUMN IF NOT EXISTS risk_label_ml VARCHAR(10)"
-        ))
-
-        # 8. Montar lista de dicts para batch update
+        # 6. Montar lista de dicts para batch update
         records = [
             {
                 "neo_id": neo_id,
-                "risk_score_ml": float(score),
+                "feed_date": feed_date,
+                "risk_proba_baixo": float(pb),
+                "risk_proba_medio": float(pm),
+                "risk_proba_alto": float(pa),
                 "risk_label_ml": str(label),
             }
-            for neo_id, score, label in zip(df["neo_id"], risk_scores, risk_labels)
+            for neo_id, feed_date, pb, pm, pa, label in zip(
+                df["neo_id"], df["feed_date"],
+                risk_proba_baixo, risk_proba_medio, risk_proba_alto,
+                risk_labels,
+            )
         ]
 
-        # 9. Executar UPDATE em batch
+        # 7. Executar UPDATE em batch
         conn.execute(
             text(
                 "UPDATE mart.mart_asteroids "
-                "SET risk_score_ml = :risk_score_ml, risk_label_ml = :risk_label_ml "
-                "WHERE neo_id = :neo_id"
+                "SET risk_proba_baixo = :risk_proba_baixo, "
+                "    risk_proba_medio = :risk_proba_medio, "
+                "    risk_proba_alto = :risk_proba_alto, "
+                "    risk_label_ml = :risk_label_ml "
+                "WHERE neo_id = :neo_id AND feed_date = :feed_date"
             ),
             records,
         )

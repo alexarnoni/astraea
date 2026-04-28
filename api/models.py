@@ -19,7 +19,9 @@ class AsteroidResponse(BaseModel):
     absolute_magnitude_h: Optional[float] = None
     is_potentially_hazardous: Optional[bool] = None
     risk_label: Optional[str] = None
-    risk_score_ml: Optional[float] = None
+    risk_proba_baixo: Optional[float] = None
+    risk_proba_medio: Optional[float] = None
+    risk_proba_alto: Optional[float] = None
     risk_label_ml: Optional[str] = None
     orbit_class: Optional[str] = None
     is_sentry_object: Optional[bool] = None
