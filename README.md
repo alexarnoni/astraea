@@ -98,7 +98,7 @@ Rate limit: 60 requests/minute per IP.
 
 ## ML Risk Model
 
-A **Random Forest classifier** trained on historical close approach data scores each asteroid into three risk levels: `low`, `medium`, or `high`.
+A **Random Forest classifier** trained on historical close approach data scores each asteroid into three risk levels: `baixo` (low), `medio` (medium), or `alto` (high).
 
 **Features used:**
 
@@ -110,7 +110,16 @@ A **Random Forest classifier** trained on historical close approach data scores 
 | `absolute_magnitude_h` | Absolute magnitude (H) |
 | `is_potentially_hazardous` | NASA potentially hazardous object flag |
 
-The trained model (`risk_classifier.joblib`) is applied in batch daily via `ml/predict.py`, updating `risk_score_ml` and `risk_label_ml` in the mart layer.
+**Outputs per asteroid:**
+
+| Field | Description |
+|---|---|
+| `risk_proba_baixo` | Probability of low risk (0.0–1.0) |
+| `risk_proba_medio` | Probability of medium risk (0.0–1.0) |
+| `risk_proba_alto` | Probability of high risk (0.0–1.0) |
+| `risk_label_ml` | Predicted class (`baixo`, `medio`, or `alto`) |
+
+The three probabilities always sum to 1.0. The trained model (`risk_classifier.joblib`) is applied in batch daily via `ml/predict.py`, updating the probability columns and `risk_label_ml` in `mart.mart_asteroids`.
 
 ---
 
@@ -119,7 +128,7 @@ raw.neo_feeds              — raw asteroid data (JSONB)
 raw.solar_events           — raw solar event data (JSONB)
 staging.stg_asteroids      — normalized asteroids
 staging.stg_solar_events   — normalized solar events
-mart.mart_asteroids        — enriched asteroids with ML risk scores
+mart.mart_asteroids        — enriched asteroids with ML risk probabilities
 mart.mart_solar_events     — enriched solar events
 
 ---
@@ -194,7 +203,7 @@ astraea/
 ├── ml/                 # Model training, scoring, and tests
 ├── api/                # FastAPI application and endpoints
 ├── dashboard/          # Vanilla JS frontend
-├── scripts/            # Database initialization SQL
+├── scripts/            # Database migrations and pipeline automation
 ├── notebooks/          # Exploratory analysis
 ├── docs/               # Assets (screenshots, diagrams)
 ├── docker-compose.yml
@@ -207,9 +216,10 @@ astraea/
 | Version | Focus |
 |---|---|
 | **v1.1** ✅ | Rate limiting, solar event detail page, date filters |
-| **v1.2** | 12-month backfill (~5,000 objects), automated ML retraining, GitHub Actions |
-| **v1.3** | Historical dashboard with Chart.js, full orbital data, multi-pass comparison |
-| **v1.4** | 2D orbit visualization (D3.js), email alerts for high-risk events |
+| **v1.2** ✅ | Full ML probability distribution (risk_proba_baixo/medio/alto), accent-tolerant class mapping |
+| **v1.3** | 12-month backfill (~5,000 objects), automated ML retraining, GitHub Actions |
+| **v1.4** | Historical dashboard with Chart.js, full orbital data, multi-pass comparison |
+| **v1.5** | 2D orbit visualization (D3.js), email alerts for high-risk events |
 | **v3.0** | Airflow migration, ESA NEO + Minor Planet Center integration |
 
 ---

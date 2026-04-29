@@ -25,7 +25,21 @@ Preencher:
 docker compose up -d
 ```
 
-## 4. Verificar
+## 4. Executar migrações SQL
+
+Na primeira instalação ou após atualizar para a versão com probabilidades ML:
+
+```bash
+# Conectar ao PostgreSQL e executar as migrações
+docker exec -i astraea-db-1 psql -U astraea -d astraea < scripts/add_risk_proba_columns.sql
+```
+
+> Após validar que as 3 probabilidades estão populadas em todas as camadas, executar a remoção da coluna obsoleta:
+> ```bash
+> docker exec -i astraea-db-1 psql -U astraea -d astraea < scripts/drop_risk_score_ml.sql
+> ```
+
+## 5. Verificar
 
 ```bash
 docker compose ps
@@ -33,7 +47,7 @@ docker logs astraea-collector-1 --tail 20
 curl http://localhost:8002/health
 ```
 
-## 5. Configurar Cloudflare
+## 6. Configurar Cloudflare
 
 No painel da Cloudflare, adicionar registro DNS:
 - Tipo: A
@@ -41,7 +55,7 @@ No painel da Cloudflare, adicionar registro DNS:
 - Conteúdo: IP da VM
 - Proxy: ativado (laranja)
 
-## 6. Configurar Nginx (proxy reverso)
+## 7. Configurar Nginx (proxy reverso)
 
 Adicionar ao arquivo de configuração do Nginx na VM:
 
@@ -60,7 +74,7 @@ server {
 
 Ou se usar Cloudflare Tunnel, configurar o tunnel para apontar `astraea.alexarnoni.com` → `localhost:8002`.
 
-## 7. Configurar cron do pipeline
+## 8. Configurar cron do pipeline
 
 Editar o crontab do usuário na VM:
 
@@ -76,7 +90,7 @@ Adicionar a linha:
 
 > Substituir `SENHA` pela senha real do banco definida no `.env`.
 
-## 8. Deploy do frontend no Cloudflare Pages
+## 9. Deploy do frontend no Cloudflare Pages
 
 No painel do Cloudflare Pages:
 1. Conectar ao repositório `github.com/alexarnoni/astraea`

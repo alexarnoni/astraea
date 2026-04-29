@@ -129,10 +129,10 @@ Refatoração do pipeline de scoring ML para expor as três probabilidades compl
     - Usar `fast-check` com mínimo 100 exemplos
     - **Valida: Requisitos 8.9, 10.4, 12.1, 12.2, 12.3**
 
-- [ ] 7. Checkpoint — Validar frontend
+- [x] 7. Checkpoint — Validar frontend
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 8. Criar script de migração final para remover `risk_score_ml`
+- [x] 8. Criar script de migração final para remover `risk_score_ml`
   - Criar arquivo `scripts/drop_risk_score_ml.sql` com `ALTER TABLE mart.mart_asteroids DROP COLUMN IF EXISTS risk_score_ml`
   - O script NÃO deve ser executado automaticamente — o desenvolvedor executa manualmente como última etapa, após todas as camadas estarem validadas
   - _Requisitos: 13.1, 13.2_
