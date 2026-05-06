@@ -1061,3 +1061,10 @@ p, li, td, th, label {
 .risk-badge--alto {
   background: #ef4444;
 }
+
+/* // history note */
+.history-note {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 0.5rem;
+}
