@@ -167,15 +167,6 @@ def run_scoring() -> None:
             )
         ]
 
-        # 7a. Garantir que existe uma linha em mart_asteroids_ml para cada asteroid
-        conn.execute(
-            text("""
-                INSERT INTO mart.mart_asteroids_ml (neo_id, feed_date)
-                SELECT neo_id, feed_date FROM mart.mart_asteroids
-                ON CONFLICT (neo_id, feed_date) DO NOTHING
-            """)
-        )
-
         # 7b. Executar UPDATE em batch
         conn.execute(
             text(
