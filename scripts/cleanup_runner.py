@@ -6,7 +6,7 @@ engine = create_engine(DATABASE_URL)
 
 with engine.connect() as conn:
     result = conn.execute(text(
-        "DELETE FROM raw.neo_feeds WHERE feed_date < CURRENT_DATE - INTERVAL '30 days'"
+        "DELETE FROM raw.neo_feeds WHERE feed_date < CURRENT_DATE - INTERVAL '400 days'"
     ))
     conn.commit()
     print(f"[cleanup] Removidos {result.rowcount} registros de raw.neo_feeds")
