@@ -1,9 +1,6 @@
 {{ config(
     materialized='table',
-    post_hook=[
-        "ALTER TABLE mart.mart_asteroids_ml DROP CONSTRAINT IF EXISTS mart_asteroids_ml_pkey",
-        "ALTER TABLE mart.mart_asteroids_ml ADD CONSTRAINT mart_asteroids_ml_pkey PRIMARY KEY (neo_id, feed_date)"
-    ]
+    post_hook="CREATE UNIQUE INDEX IF NOT EXISTS mart_asteroids_ml_neo_feed_idx ON mart.mart_asteroids_ml (neo_id, feed_date)"
 ) }}
 
 select
