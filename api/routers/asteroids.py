@@ -75,7 +75,14 @@ def list_asteroids(
 
     where = ("WHERE " + " AND ".join(filters)) if filters else ""
     sql = text(f"""
-        SELECT * FROM mart.mart_asteroids
+        SELECT a.*,
+               m.risk_proba_baixo,
+               m.risk_proba_medio,
+               m.risk_proba_alto,
+               m.risk_label_ml
+        FROM mart.mart_asteroids a
+        LEFT JOIN mart.mart_asteroids_ml m
+            ON a.neo_id = m.neo_id AND a.feed_date = m.feed_date
         {where}
         ORDER BY close_approach_date ASC, miss_distance_lunar ASC NULLS LAST
         LIMIT :limit OFFSET :offset
@@ -88,7 +95,14 @@ def list_asteroids(
 @limiter.limit("60/minute")
 def upcoming_asteroids(request: Request, db: Session = Depends(get_db)):
     sql = text("""
-        SELECT * FROM mart.mart_asteroids
+        SELECT a.*,
+               m.risk_proba_baixo,
+               m.risk_proba_medio,
+               m.risk_proba_alto,
+               m.risk_label_ml
+        FROM mart.mart_asteroids a
+        LEFT JOIN mart.mart_asteroids_ml m
+            ON a.neo_id = m.neo_id AND a.feed_date = m.feed_date
         WHERE close_approach_date >= CURRENT_DATE
         ORDER BY close_approach_date ASC
         LIMIT 20
@@ -100,7 +114,17 @@ def upcoming_asteroids(request: Request, db: Session = Depends(get_db)):
 @router.get("/asteroids/{neo_id}", response_model=AsteroidResponse)
 @limiter.limit("60/minute")
 def get_asteroid(request: Request, neo_id: str, db: Session = Depends(get_db)):
-    sql = text("SELECT * FROM mart.mart_asteroids WHERE neo_id = :neo_id")
+    sql = text("""
+        SELECT a.*,
+               m.risk_proba_baixo,
+               m.risk_proba_medio,
+               m.risk_proba_alto,
+               m.risk_label_ml
+        FROM mart.mart_asteroids a
+        LEFT JOIN mart.mart_asteroids_ml m
+            ON a.neo_id = m.neo_id AND a.feed_date = m.feed_date
+        WHERE a.neo_id = :neo_id
+    """)
     row = db.execute(sql, {"neo_id": neo_id}).fetchone()
     if row is None:
         raise HTTPException(status_code=404, detail="Asteroid not found")

@@ -146,14 +146,23 @@ def run_scoring() -> None:
             )
         ]
 
-        # 7. Executar UPDATE em batch
+        # 7a. Garantir que existe uma linha em mart_asteroids_ml para cada asteroid
+        conn.execute(
+            text("""
+                INSERT INTO mart.mart_asteroids_ml (neo_id, feed_date)
+                SELECT neo_id, feed_date FROM mart.mart_asteroids
+                ON CONFLICT (neo_id, feed_date) DO NOTHING
+            """)
+        )
+
+        # 7b. Executar UPDATE em batch
         conn.execute(
             text(
-                "UPDATE mart.mart_asteroids "
+                "UPDATE mart.mart_asteroids_ml "
                 "SET risk_proba_baixo = :risk_proba_baixo, "
                 "    risk_proba_medio = :risk_proba_medio, "
-                "    risk_proba_alto = :risk_proba_alto, "
-                "    risk_label_ml = :risk_label_ml "
+                "    risk_proba_alto  = :risk_proba_alto, "
+                "    risk_label_ml    = :risk_label_ml "
                 "WHERE neo_id = :neo_id AND feed_date = :feed_date"
             ),
             records,
