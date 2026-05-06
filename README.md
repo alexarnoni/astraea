@@ -1,6 +1,4 @@
-# Astraea
-
-![pipeline](https://img.shields.io/badge/pipeline-passing-brightgreen)
+# 🌌 Astraea
 
 Near-Earth Object (NEO) monitoring and solar event tracking platform with ML-based risk classification.
 
