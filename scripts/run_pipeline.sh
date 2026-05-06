@@ -9,7 +9,11 @@ if [[ -z "${DATABASE_URL:-}" ]]; then
   exit 1
 fi
 
-echo "[1/2] Rodando dbt..."
+echo "[0/3] Limpeza de registros antigos..."
+bash "$SCRIPT_DIR/cleanup_old_records.sh"
+echo "[0/3] Limpeza concluída."
+
+echo "[1/3] Rodando dbt..."
 docker run --rm \
   --network astraea_default \
   -v "$PROJECT_ROOT/dbt":/dbt \
@@ -18,9 +22,9 @@ docker run --rm \
     pip install dbt-postgres==1.8.2 -q &&
     dbt run --profiles-dir /dbt/profiles
   "
-echo "[1/2] dbt concluído."
+echo "[1/3] dbt concluído."
 
-echo "[2/2] Rodando ML scoring..."
+echo "[2/3] Rodando ML scoring..."
 docker run --rm \
   --network astraea_default \
   -v "$PROJECT_ROOT/ml":/ml \
@@ -32,6 +36,6 @@ docker run --rm \
       python-dotenv==1.0.1 pg8000==1.31.2 -q &&
     python predict.py
   "
-echo "[2/2] ML scoring concluído."
+echo "[2/3] ML scoring concluído."
 
-echo "Pipeline finalizado com sucesso."
+echo "[3/3] Pipeline finalizado com sucesso."
