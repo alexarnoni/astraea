@@ -6,6 +6,7 @@ Uso:
     python predict.py             (a partir de dentro de ml/)
 """
 
+import json
 import os
 import sys
 import unicodedata
@@ -21,6 +22,7 @@ _ML_DIR = Path(__file__).resolve().parent
 _ROOT_DIR = _ML_DIR.parent
 _DOTENV_PATH = _ROOT_DIR / ".env"
 _MODEL_PATH = _ML_DIR / "models" / "risk_classifier.joblib"
+_METADATA_PATH = _ML_DIR / "models" / "metadata.json"
 
 FEATURE_COLUMNS = [
     "miss_distance_lunar",
@@ -37,6 +39,19 @@ def _make_engine(database_url: str):
     url = database_url.replace("postgresql://", "postgresql+pg8000://", 1)
     url = url.replace("postgresql+psycopg2://", "postgresql+pg8000://", 1)
     return create_engine(url)
+
+
+def _load_metadata() -> dict | None:
+    """Carrega metadata.json. Retorna None se arquivo não existir ou JSON inválido."""
+    if not _METADATA_PATH.exists():
+        print("[WARNING] metadata.json não encontrado. Continuando sem metadados.")
+        return None
+    try:
+        with open(_METADATA_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except json.JSONDecodeError:
+        print("[ERROR] metadata.json contém JSON inválido. Continuando sem metadados.")
+        return None
 
 
 def _validate_and_map_classes(model) -> dict[str, int]:
@@ -94,6 +109,12 @@ def run_scoring() -> None:
         )
 
     model = joblib.load(_MODEL_PATH)
+
+    # 2b. Carregar e logar metadados do modelo
+    metadata = _load_metadata()
+    if metadata:
+        print(f"[INFO] model_version: {metadata.get('model_version', 'N/A')}")
+        print(f"[INFO] trained_at: {metadata.get('trained_at', 'N/A')}")
 
     # 3. Consultar dados do mart
     engine = _make_engine(database_url)

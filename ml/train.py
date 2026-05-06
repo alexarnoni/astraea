@@ -6,12 +6,15 @@ Uso:
     python train.py             (a partir de dentro de ml/)
 """
 
+import json
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import joblib
 import pandas as pd
+import sklearn
 from dotenv import load_dotenv
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report
@@ -48,7 +51,7 @@ def load_data(database_url: str) -> pd.DataFrame:
     """Consulta mart.mart_asteroids e retorna o DataFrame com features + target."""
     engine = _make_engine(database_url)
     query = text(
-        "SELECT neo_id, miss_distance_lunar, relative_velocity_km_s, "
+        "SELECT neo_id, feed_date, miss_distance_lunar, relative_velocity_km_s, "
         "estimated_diameter_min_km, estimated_diameter_max_km, "
         "absolute_magnitude_h, is_potentially_hazardous, risk_label "
         "FROM mart.mart_asteroids"
@@ -114,11 +117,33 @@ def print_metrics(metrics: dict) -> None:
         )
 
 
-def save_model(model: RandomForestClassifier) -> None:
-    """Cria ml/models/ se necessário e serializa o modelo."""
+def _build_metadata(df: pd.DataFrame, metrics: dict) -> dict:
+    """Constrói o dicionário de metadados para serialização."""
+    return {
+        "model_version": "1.0.0",
+        "trained_at": datetime.now(timezone.utc).isoformat(),
+        "sklearn_version": sklearn.__version__,
+        "feature_columns": FEATURE_COLUMNS,
+        "training_data_range": {
+            "start": str(df["feed_date"].min()),
+            "end": str(df["feed_date"].max()),
+        },
+        "total_samples": len(df),
+        "accuracy": metrics["accuracy"],
+    }
+
+
+def save_model(model: RandomForestClassifier, df: pd.DataFrame, metrics: dict) -> None:
+    """Cria ml/models/ se necessário e serializa o modelo com metadados."""
     os.makedirs(_MODELS_DIR, exist_ok=True)
     joblib.dump(model, _MODEL_PATH)
     print(f"Model saved to {_MODEL_PATH}")
+
+    metadata = _build_metadata(df, metrics)
+    metadata_path = _MODELS_DIR / "metadata.json"
+    with open(metadata_path, "w", encoding="utf-8") as f:
+        json.dump(metadata, f, ensure_ascii=False, indent=2)
+    print(f"Metadata saved to {metadata_path}")
 
 
 def main() -> None:
@@ -148,7 +173,7 @@ def main() -> None:
     print_metrics(metrics)
 
     # 5. Persistir modelo
-    save_model(model)
+    save_model(model, df, metrics)
 
 
 if __name__ == "__main__":

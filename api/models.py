@@ -27,6 +27,8 @@ class AsteroidResponse(BaseModel):
     is_sentry_object: Optional[bool] = None
     first_observation_date: Optional[str] = None
     nasa_jpl_url: Optional[str] = None
+    model_version: Optional[str] = None
+    model_trained_at: Optional[str] = None
 
 
 class SolarEventResponse(BaseModel):

@@ -1,4 +1,6 @@
+import json
 from datetime import date
+from pathlib import Path
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import text
@@ -7,6 +9,22 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models import AsteroidResponse
 from limiter import limiter
+
+_METADATA_PATH = Path("/app/ml/models/metadata.json")
+
+
+def _load_model_metadata() -> dict:
+    """Carrega metadata.json uma vez no startup. Retorna dict vazio se ausente."""
+    try:
+        if not _METADATA_PATH.exists():
+            return {}
+        with open(_METADATA_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+_MODEL_METADATA = _load_model_metadata()
 
 router = APIRouter()
 
@@ -42,6 +60,8 @@ def _row_to_asteroid(row) -> AsteroidResponse:
         is_sentry_object=_safe_get(row, "is_sentry_object"),
         first_observation_date=str(v) if (v := _safe_get(row, "first_observation_date")) is not None else None,
         nasa_jpl_url=_safe_get(row, "nasa_jpl_url"),
+        model_version=_MODEL_METADATA.get("model_version"),
+        model_trained_at=_MODEL_METADATA.get("trained_at"),
     )
 
 
