@@ -167,16 +167,19 @@ def run_scoring() -> None:
             )
         ]
 
-        # 7b. Executar UPDATE em batch
+        # 7b. INSERT ... ON CONFLICT ... DO UPDATE (upsert)
         conn.execute(
-            text(
-                "UPDATE mart.mart_asteroids_ml "
-                "SET risk_proba_baixo = :risk_proba_baixo, "
-                "    risk_proba_medio = :risk_proba_medio, "
-                "    risk_proba_alto  = :risk_proba_alto, "
-                "    risk_label_ml    = :risk_label_ml "
-                "WHERE neo_id = :neo_id AND feed_date = :feed_date"
-            ),
+            text("""
+                INSERT INTO mart.mart_asteroids_ml
+                    (neo_id, feed_date, risk_proba_baixo, risk_proba_medio, risk_proba_alto, risk_label_ml)
+                VALUES
+                    (:neo_id, :feed_date, :risk_proba_baixo, :risk_proba_medio, :risk_proba_alto, :risk_label_ml)
+                ON CONFLICT (neo_id, feed_date) DO UPDATE SET
+                    risk_proba_baixo = EXCLUDED.risk_proba_baixo,
+                    risk_proba_medio = EXCLUDED.risk_proba_medio,
+                    risk_proba_alto  = EXCLUDED.risk_proba_alto,
+                    risk_label_ml    = EXCLUDED.risk_label_ml
+            """),
             records,
         )
 
