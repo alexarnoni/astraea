@@ -167,23 +167,19 @@ def run_scoring() -> None:
             )
         ]
 
-        # 7b. INSERT ... ON CONFLICT ... DO UPDATE (upsert)
+        # 7b. DELETE + INSERT em transação única.
+        # Seguro porque o dbt recria mart_asteroids_ml a cada execução,
+        # então a tabela sempre reflete o estado atual de mart_asteroids.
+    with engine.begin() as conn:
+        conn.execute(text("DELETE FROM mart.mart_asteroids_ml"))
         conn.execute(
             text("""
                 INSERT INTO mart.mart_asteroids_ml
                     (neo_id, feed_date, risk_proba_baixo, risk_proba_medio, risk_proba_alto, risk_label_ml)
-                VALUES
-                    (:neo_id, :feed_date, :risk_proba_baixo, :risk_proba_medio, :risk_proba_alto, :risk_label_ml)
-                ON CONFLICT (neo_id, feed_date) DO UPDATE SET
-                    risk_proba_baixo = EXCLUDED.risk_proba_baixo,
-                    risk_proba_medio = EXCLUDED.risk_proba_medio,
-                    risk_proba_alto  = EXCLUDED.risk_proba_alto,
-                    risk_label_ml    = EXCLUDED.risk_label_ml
+                VALUES (:neo_id, :feed_date, :risk_proba_baixo, :risk_proba_medio, :risk_proba_alto, :risk_label_ml)
             """),
             records,
         )
-
-        conn.commit()
 
     n = len(records)
     print(f"Updated {n} records.")
