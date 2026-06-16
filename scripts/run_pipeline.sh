@@ -19,7 +19,7 @@ docker run --rm \
   -v "$PROJECT_ROOT/dbt":/dbt \
   -w /dbt/astraea \
   python:3.11-slim bash -c "
-    pip install "dbt-core==1.8.7" "dbt-postgres==1.8.2" -q &&
+    pip install -r /dbt/requirements.txt -q &&
     dbt run --profiles-dir /dbt/profiles
   "
 echo "[1/3] dbt concluído."
