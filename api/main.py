@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -5,6 +7,16 @@ from slowapi.middleware import SlowAPIMiddleware
 from slowapi.errors import RateLimitExceeded
 from limiter import limiter
 from routers import asteroids, solar_events, stats
+
+# Origens permitidas para CORS. Configurável via CORS_ALLOW_ORIGINS
+# (lista separada por vírgula). Default cobre o dashboard em produção
+# e o desenvolvimento local.
+_DEFAULT_ORIGINS = "https://astraea.alexarnoni.com,http://localhost:5500,http://127.0.0.1:5500"
+CORS_ALLOW_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get("CORS_ALLOW_ORIGINS", _DEFAULT_ORIGINS).split(",")
+    if origin.strip()
+]
 
 
 async def _rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
@@ -27,7 +39,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=CORS_ALLOW_ORIGINS,
     allow_methods=["GET"],
     allow_headers=["*"],
 )

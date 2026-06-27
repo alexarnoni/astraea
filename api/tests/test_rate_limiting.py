@@ -20,7 +20,8 @@ for _mod_name in ("routers", "routers.asteroids", "routers.solar_events", "route
     sys.modules[_mod_name] = _m
 
 with patch("sqlalchemy.create_engine"):
-    from main import app, get_client_ip, limiter
+    from main import app, limiter
+    from limiter import get_client_ip
     from database import get_db
 
 _v1_router = APIRouter()

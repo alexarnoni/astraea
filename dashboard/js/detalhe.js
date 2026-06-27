@@ -342,7 +342,7 @@ export function renderMLPanel(asteroid) {
   <p class="section-label">análise de risco — modelo ml</p>
   <div style="margin-bottom:0.75rem"><span class="risk-badge risk-badge--${cls}">${label}</span></div>
   <p style="font-size:0.9rem;color:var(--muted);margin-bottom:0.75rem">
-    Modelo de Machine Learning classificou este asteroide como <strong style="color:var(--text)">${label}</strong> risco, com <strong style="color:var(--text)">${pct}%</strong> de certeza nessa classificação.
+    Classificado como <strong style="color:var(--text)">${label}</strong> risco com <strong style="color:var(--text)">${pct}%</strong> de probabilidade
   </p>
   ${probaRow("baixo", "baixo", probaBaixo)}
   ${probaRow("medio", "médio", probaMedio)}

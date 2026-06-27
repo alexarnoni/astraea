@@ -21,22 +21,25 @@ if str(_ML_DIR) not in sys.path:
 
 
 def _import_validate_and_map_classes():
-    """Importa _validate_and_map_classes mockando dependências pesadas."""
-    mocks = {}
-    for mod_name in ("joblib", "pandas", "dotenv", "sqlalchemy"):
+    """Importa _validate_and_map_classes mockando dependências pesadas.
+
+    Os stubs injetados em sys.modules são removidos após o import para não
+    poluir outros módulos de teste que dependem dos pacotes reais.
+    """
+    added = []
+    for mod_name in ("joblib", "pandas", "dotenv", "sqlalchemy", "sqlalchemy.engine"):
         if mod_name not in sys.modules:
-            mocks[mod_name] = MagicMock()
-            sys.modules[mod_name] = mocks[mod_name]
-    # Sub-módulos necessários
-    for sub in ("sqlalchemy.engine", "sqlalchemy"):
-        if sub not in sys.modules:
-            mocks[sub] = MagicMock()
-            sys.modules[sub] = mocks[sub]
+            sys.modules[mod_name] = MagicMock()
+            added.append(mod_name)
 
     if "predict" in sys.modules:
         del sys.modules["predict"]
 
     from predict import _validate_and_map_classes
+
+    for mod_name in added:
+        sys.modules.pop(mod_name, None)
+
     return _validate_and_map_classes
 
 

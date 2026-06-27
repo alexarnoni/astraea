@@ -18,21 +18,26 @@ if str(_ML_DIR) not in sys.path:
 
 
 def _ensure_predict_module():
-    """Importa o módulo predict mockando dependências pesadas."""
-    mocks = {}
-    for mod_name in ("joblib", "pandas", "dotenv", "sqlalchemy"):
+    """Importa o módulo predict mockando dependências pesadas.
+
+    Os stubs injetados em sys.modules são removidos após o import para não
+    poluir outros módulos de teste (ex.: test_model_version precisa do
+    joblib/sklearn reais). O módulo predict mantém suas próprias referências.
+    """
+    added = []
+    for mod_name in ("joblib", "pandas", "dotenv", "sqlalchemy", "sqlalchemy.engine"):
         if mod_name not in sys.modules:
-            mocks[mod_name] = MagicMock()
-            sys.modules[mod_name] = mocks[mod_name]
-    for sub in ("sqlalchemy.engine", "sqlalchemy"):
-        if sub not in sys.modules:
-            mocks[sub] = MagicMock()
-            sys.modules[sub] = mocks[sub]
+            sys.modules[mod_name] = MagicMock()
+            added.append(mod_name)
 
     if "predict" in sys.modules:
         del sys.modules["predict"]
 
     import predict
+
+    for mod_name in added:
+        sys.modules.pop(mod_name, None)
+
     return predict
 
 
