@@ -62,3 +62,31 @@ models:
           - not_null
           - accepted_values:
               values: ['alto', 'médio', 'baixo']
+
+  - name: mart_asteroids_ml
+    description: >
+      Saídas do scoring de ML por asteroide e data de feed (neo_id, feed_date). Populada pelo
+      ml/predict.py após cada dbt run; o modelo dbt cria apenas a estrutura vazia. As colunas
+      risk_proba_* e risk_label_ml vêm do modelo 1.0.0 (legado), cujo alvo é o risk_label
+      calculado por regra. As colunas pha_* são reservadas ao modelo 2.0.0.
+    columns:
+      - name: neo_id
+        description: Identificador do asteroide na NASA (NeoWs).
+      - name: feed_date
+        description: Data do feed, junto com neo_id forma a chave de junção com mart_asteroids.
+      - name: risk_proba_baixo
+        description: Probabilidade da classe baixo segundo o modelo legado 1.0.0.
+      - name: risk_proba_medio
+        description: Probabilidade da classe médio segundo o modelo legado 1.0.0.
+      - name: risk_proba_alto
+        description: Probabilidade da classe alto segundo o modelo legado 1.0.0.
+      - name: risk_label_ml
+        description: Classe prevista pelo modelo legado 1.0.0, que reproduz a regra do risk_label.
+      - name: pha_probability
+        description: >
+          Probabilidade estimada de a flag PHA da NASA (is_potentially_hazardous) ser positiva,
+          produzida pelo modelo 2.0.0 quando ele entrar em produção. Nula até lá.
+      - name: pha_model_version
+        description: >
+          Versão do modelo que produziu pha_probability (por exemplo 2.0.0), quando o modelo 2.0.0
+          entrar em produção. Nula até lá.
