@@ -8,7 +8,7 @@ import json
 import sys
 import os
 from datetime import date, timedelta
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 
 import pytest
 from hypothesis import given, settings, assume
@@ -374,7 +374,6 @@ def test_extract_records_multiple_dates():
 
 def test_process_window_calls_api_with_correct_params():
     """process_window calls the API with correct start_date, end_date, api_key."""
-    import httpx
     from backfill_neows import process_window
 
     mock_response = MagicMock()
@@ -395,7 +394,7 @@ def test_process_window_calls_api_with_correct_params():
 
     mock_client.get.assert_called_once()
     call_kwargs = mock_client.get.call_args
-    params = call_kwargs[1]["params"] if "params" in call_kwargs[1] else call_kwargs[0][1]
+    _params = call_kwargs[1]["params"] if "params" in call_kwargs[1] else call_kwargs[0][1]
     # Check via the actual call
     _, kwargs = mock_client.get.call_args
     assert kwargs["params"]["start_date"] == "2024-01-01"

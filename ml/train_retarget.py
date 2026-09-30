@@ -515,7 +515,6 @@ def _f(x: float, nd: int = 4) -> str:
 
 
 def build_notes(res: dict) -> str:
-    s = res["cv"]["summary"]
     t = res["temporal"]
     d = res["diameter"]
     parts = [
