@@ -6,6 +6,7 @@ import httpx
 from sqlalchemy import text
 
 from db import SessionLocal
+from log_safety import describe_http_error
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ def collect_neows() -> None:
         )
         resp.raise_for_status()
     except httpx.HTTPError as exc:
-        logger.error("NeoWs: HTTP error — %s", exc)
+        logger.error("NeoWs: HTTP error, %s", describe_http_error(exc))
         return
 
     neo_by_date: dict = resp.json().get("near_earth_objects", {})

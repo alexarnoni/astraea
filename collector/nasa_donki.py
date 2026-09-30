@@ -7,6 +7,7 @@ import httpx
 from sqlalchemy import text
 
 from db import SessionLocal
+from log_safety import describe_http_error
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +86,7 @@ def _fetch(endpoint: str, start_date: date, end_date: date) -> list:
         data = resp.json()
         return data if isinstance(data, list) else []
     except httpx.HTTPError as exc:
-        logger.error("DONKI %s: HTTP error — %s", endpoint, exc)
+        logger.error("DONKI %s: HTTP error, %s", endpoint, describe_http_error(exc))
         return []
 
 

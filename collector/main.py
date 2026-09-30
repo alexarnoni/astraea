@@ -2,6 +2,7 @@ import logging
 
 from apscheduler.schedulers.blocking import BlockingScheduler
 
+from log_safety import install_redaction, quiet_http_loggers
 from nasa_neows import collect_neows
 from nasa_donki import collect_cme, collect_gst
 
@@ -9,6 +10,9 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(message)s",
 )
+# A chave da NASA vai na URL: sem log por requisicao do httpx e com mascara de api_key.
+quiet_http_loggers()
+install_redaction()
 
 # Coleta imediata na inicialização
 collect_neows()
