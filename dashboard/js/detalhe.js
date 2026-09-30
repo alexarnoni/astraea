@@ -181,7 +181,7 @@ export function renderMetricCards(asteroid) {
     [
       mlDisplay,
       "Score ML",
-      "Probabilidade atribuída pelo modelo de machine learning à classe de risco predita.",
+      "Probabilidade atribuída pelo modelo de machine learning à classe de risco predita. O modelo em produção reproduz a regra de risco do projeto, que não é metodologia da NASA.",
     ],
     [
       asteroid.orbit_class ?? "—",

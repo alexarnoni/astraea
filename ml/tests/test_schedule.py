@@ -2,13 +2,10 @@
 Testes unitários para ml/schedule.py.
 """
 
-import importlib
-import subprocess
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
 
 # Garantir que ml/ está no path para importar schedule
 _ML_DIR = Path(__file__).resolve().parent.parent

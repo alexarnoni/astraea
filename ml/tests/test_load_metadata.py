@@ -7,9 +7,8 @@ Valida o carregamento gracioso de metadata.json no pipeline de scoring.
 import json
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import pytest
 
 # Garantir que ml/ está no path para importar predict
 _ML_DIR = Path(__file__).resolve().parent.parent

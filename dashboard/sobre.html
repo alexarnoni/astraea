@@ -33,9 +33,19 @@
         e são processados por um pipeline de dados automatizado.
       </p>
       <p style="font-size:1rem;line-height:1.8;color:var(--text);font-weight:300;margin-bottom:1rem">
-        Cada asteroide recebe uma classificação de risco calculada por um modelo de machine learning
-        treinado com dados históricos. Os eventos solares — como ejeções de massa coronal (CMEs) e
-        tempestades geomagnéticas (GSTs) — são monitorados e classificados por intensidade.
+        Cada asteroide recebe um rótulo de risco (baixo, médio ou alto) calculado por uma regra própria
+        do projeto, com limiares escolhidos pelo autor. Não é metodologia da NASA. Hoje o dashboard
+        exibe o rótulo previsto por um modelo de machine learning que apenas reproduz essa regra, então
+        a acurácia dele não mede qualidade preditiva. A decisão de projeto é exibir o rótulo da regra
+        diretamente, e essa migração está em andamento.
+      </p>
+      <p style="font-size:1rem;line-height:1.8;color:var(--text);font-weight:300;margin-bottom:1rem">
+        Um novo modelo, que estima se a NASA classifica o objeto como potencialmente perigoso (PHA), foi
+        validado (precisão 0,64, recall 0,44 e F1 0,52 na validação cruzada por asteroide), mas ainda não está
+        em produção. O recall é baixo e o resultado depende sobretudo da magnitude absoluta H. Nenhum dos
+        dois substitui avaliações oficiais. Os eventos solares (ejeções de massa coronal, CMEs, e
+        tempestades geomagnéticas, GSTs) são monitorados e classificados por intensidade.
+        Detalhes em <a href="https://github.com/alexarnoni/astraea/blob/main/docs/ml-report.md" target="_blank" rel="noopener">docs/ml-report.md</a>.
       </p>
       <p style="font-size:1rem;line-height:1.8;color:var(--text);font-weight:300">
         O objetivo é tornar dados científicos complexos acessíveis de forma clara e visual.
@@ -59,7 +69,7 @@
         </div>
         <div class="stat-card" style="padding:1rem">
           <div class="stat-card__value" style="font-size:1rem">scikit-learn</div>
-          <div class="stat-card__label">Modelo ML de risco</div>
+          <div class="stat-card__label">Modelos de ML</div>
         </div>
         <div class="stat-card" style="padding:1rem">
           <div class="stat-card__value" style="font-size:1rem">Python</div>

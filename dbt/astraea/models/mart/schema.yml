@@ -1,0 +1,64 @@
+version: 2
+
+models:
+  - name: mart_asteroids
+    description: >
+      Uma linha por asteroide e data de feed (neo_id, feed_date), com os dados de aproximação
+      da NASA NeoWs e um risk_score e um risk_label calculados por regra. O risk_score e o
+      risk_label são uma heurística própria do projeto, com limiares escolhidos pelo autor.
+      Não são metodologia da NASA e não trazem nenhuma métrica de acurácia, porque são
+      calculados por regra, não previstos.
+    columns:
+      - name: neo_id
+        description: Identificador do asteroide na NASA (NeoWs).
+        data_tests:
+          - not_null
+      - name: name
+        description: Nome do objeto.
+      - name: feed_date
+        description: Data do feed em que a aproximação foi coletada.
+        data_tests:
+          - not_null
+      - name: ingested_at
+        description: Momento em que a linha bruta foi ingerida.
+      - name: close_approach_date
+        description: Data da aproximação (primeiro item de close_approach_data).
+      - name: miss_distance_lunar
+        description: Distância de passagem em distâncias lunares, da aproximação específica desta linha.
+      - name: miss_distance_km
+        description: Distância de passagem em km, da aproximação específica desta linha.
+      - name: relative_velocity_km_s
+        description: Velocidade relativa em km/s.
+      - name: velocity_km_per_h
+        description: Velocidade relativa em km/h.
+      - name: estimated_diameter_min_km
+        description: Diâmetro estimado mínimo em km.
+      - name: estimated_diameter_max_km
+        description: Diâmetro estimado máximo em km.
+      - name: absolute_magnitude_h
+        description: Magnitude absoluta H.
+      - name: is_potentially_hazardous
+        description: Flag da NASA de objeto potencialmente perigoso (PHA).
+      - name: orbit_class
+        description: Classe orbital.
+      - name: is_sentry_object
+        description: Se o objeto está na lista Sentry da NASA.
+      - name: first_observation_date
+        description: Data da primeira observação.
+      - name: nasa_jpl_url
+        description: Link para o JPL Small-Body Database.
+      - name: risk_score
+        description: >
+          Heurística própria do projeto, com limiares escolhidos pelo autor, não metodologia
+          da NASA. Soma de pontos: PHA = 3, velocidade relativa maior que 20 km/s = 2,
+          distância de passagem menor que 1.000.000 km = 2, diâmetro estimado máximo maior
+          que 0,5 km = 1. Varia de 0 a 8.
+      - name: risk_label
+        description: >
+          Rótulo derivado do risk_score pela mesma heurística própria: alto quando o
+          risk_score é maior ou igual a 6, médio quando é maior ou igual a 3, baixo nos
+          demais casos. Não é metodologia da NASA.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['alto', 'médio', 'baixo']

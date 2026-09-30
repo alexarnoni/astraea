@@ -1,0 +1,12 @@
+# Conjunto minimo de regras: erros de sintaxe e de logica (E, F). Sem reformatar o repo.
+target-version = "py311"
+extend-exclude = ["dashboard", "dbt", ".kiro", "notebooks"]
+
+[lint]
+select = ["E", "F"]
+# Comprimento de linha nao e imposto nesta etapa.
+ignore = ["E501"]
+
+[lint.per-file-ignores]
+# Os testes ajustam sys.path e variaveis de ambiente antes de importar o codigo testado.
+"**/tests/**" = ["E402"]
