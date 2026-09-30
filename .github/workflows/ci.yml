@@ -45,6 +45,12 @@ jobs:
           DATABASE_URL: postgresql://test:test@localhost/test
         run: python -m pytest tests -q
 
+      - name: pytest (collector)
+        working-directory: collector
+        env:
+          DATABASE_URL: postgresql://test:test@localhost/test
+        run: python -m pytest tests -q
+
       - name: pytest (scripts)
         working-directory: scripts
         env:
