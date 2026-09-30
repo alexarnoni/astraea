@@ -77,12 +77,12 @@ with thresholds chosen by the author. **It is not a NASA methodology.** It is co
 
 `risk_label` is `alto` when the score is >= 6, `médio` when >= 3, and `baixo` otherwise.
 
-Which label the product shows today (verified in the code): the dashboard badges, the
-`?risk_label=` filter of `GET /v1/asteroids` and the risk counts of `GET /v1/stats/summary` read
-`risk_label_ml`, the prediction of the production model 1.0.0 described below. The API response
-also carries the rule-based `risk_label`. The project decision is to migrate the displayed risk to
-the rule-based `risk_label`, with the ML model exposing a PHA probability instead. That migration
-is in rollout and is not done yet.
+Which label the product shows (verified in the code): the dashboard badges and the asteroid page
+show the rule-based `risk_label`. The ML model exposes a PHA probability (`pha_probability`, with
+`pha_model_version`) instead of a risk class, shown on the asteroid page when available. Two API
+pieces still read `risk_label_ml`, the prediction of the legacy model 1.0.0 described below: the
+`?risk_label=` filter of `GET /v1/asteroids` and the risk counts of `GET /v1/stats/summary`. Moving
+them to the rule-based label is part of the same rollout and is not done yet.
 
 ## ML Model
 
@@ -134,8 +134,9 @@ What the numbers say, and their limits:
   cross-validation F1. Removing test asteroids already seen in training gives F1 0.4000, PR-AUC 0.5532.
   With about 43 positives in the test set, the data do not separate temporal drift from variance.
 
-Status: model 2.0.0 is validated and in rollout. It is **not** in production and does
-not serve the API or the dashboard yet. Details, per-fold metrics and confusion matrices:
+Status: model 2.0.0 is validated and in rollout. The API and the dashboard read its output
+(`pha_probability`) from `mart.mart_asteroids_ml`, whose `pha_*` columns stay NULL until the model
+artifact is published to the server and the scoring runs. Details, per-fold metrics and confusion matrices:
 [`docs/ml-report.md`](docs/ml-report.md). Training script: `ml/train_retarget.py`.
 
 ## API Endpoints
