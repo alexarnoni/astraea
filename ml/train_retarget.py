@@ -42,6 +42,7 @@ from sklearn.metrics import (
     average_precision_score,
     confusion_matrix,
     f1_score,
+    precision_recall_curve,
     precision_score,
     recall_score,
 )
@@ -266,7 +267,15 @@ def run_cv(df: pd.DataFrame, folds, warns: list[str]) -> dict:
         name: np.sum([r["confusion_matrix"] for r in rows], axis=0).tolist()
         for name, rows in per.items()
     }
+    oof = {}
+    for name in ("rf", "logreg"):
+        arr = np.full(len(df), np.nan)
+        for (_, te), r in zip(folds, per[name]):
+            arr[te] = r["_score"]
+        oof[name] = arr
+
     return {
+        "_oof": oof,
         "per_fold": {k: [_public(r) for r in v] for k, v in per.items()},
         "summary": {k: _mean_std(v) for k, v in per.items()},
         "confusion_total": total_cm,
@@ -305,15 +314,20 @@ def run_temporal(df: pd.DataFrame, warns: list[str]) -> dict:
     out["n_test_asteroids_in_train"] = int(test.loc[overlap_mask, "neo_id"].nunique())
     out["n_test_rows_in_train_asteroids"] = int(overlap_mask.sum())
 
-    def run(test_df: pd.DataFrame) -> dict:
+    def run(test_df: pd.DataFrame, keep: dict | None = None) -> dict:
         res = {}
         for name, factory in (("rf", make_rf), ("majority", make_majority), ("logreg", make_logreg)):
             r = evaluate(factory(), train[FEATURE_COLUMNS], train[TARGET_COLUMN],
                          test_df[FEATURE_COLUMNS], test_df[TARGET_COLUMN])
             res[name] = _public(r)
+            if keep is not None:
+                keep[name] = r["_score"]
         return res
 
-    out["all_test_rows"] = run(test)
+    kept: dict = {}
+    out["all_test_rows"] = run(test, kept)
+    out["_test_scores"] = kept
+    out["_test_index"] = test.index.to_numpy()
     new_only = test[~overlap_mask]
     out["n_test_new_only"] = int(len(new_only))
     out["n_test_new_only_positive"] = int(new_only[TARGET_COLUMN].sum())
@@ -385,6 +399,70 @@ def run_reference_rule(df: pd.DataFrame, folds, temporal: dict) -> dict:
     return out
 
 
+# ---------------------------------------------------------------- exploratoria posterior
+
+# Analise exploratoria acrescentada depois da primeira execucao. Nao altera nenhuma
+# metrica publicada: apenas rele as pontuacoes fora da amostra ja geradas.
+EXPLORATORY_RECALLS = (0.95, 0.99)
+
+
+def _operating_point(y: np.ndarray, score: np.ndarray, min_recall: float) -> dict:
+    """Maior precisao com recall >= min_recall na curva precisao-recall.
+
+    Empate de precisao: fica o maior threshold. Threshold so descreve o ponto.
+    """
+    prec, rec, thr = precision_recall_curve(y, score)
+    prec, rec = prec[:-1], rec[:-1]  # alinha com thr
+    ok = rec >= min_recall
+    if not ok.any():
+        return {"min_recall": min_recall, "reachable": False}
+    best = prec[ok].max()
+    cand = np.where(ok & (prec == best))[0]
+    i = cand[np.argmax(thr[cand])]
+    pred = (score >= thr[i]).astype(int)
+    return {
+        "min_recall": min_recall,
+        "reachable": True,
+        "precision": float(prec[i]),
+        "recall": float(rec[i]),
+        "threshold": float(thr[i]),
+        "n_flagged": int(pred.sum()),
+        "n_positive": int(np.sum(y)),
+    }
+
+
+def _score_block(y: np.ndarray, scores: dict) -> dict:
+    out = {}
+    for name, sc in scores.items():
+        out[name] = {
+            "pr_auc": float(average_precision_score(y, sc)),
+            "points": [_operating_point(y, sc, r) for r in EXPLORATORY_RECALLS],
+        }
+    return out
+
+
+def run_exploratory(df: pd.DataFrame, cv: dict, temporal: dict) -> dict:
+    y = df[TARGET_COLUMN].to_numpy()
+    h_score = -df["absolute_magnitude_h"].to_numpy()
+    oof = cv["_oof"]
+    assert not np.isnan(oof["rf"]).any() and not np.isnan(oof["logreg"]).any()
+    out = {
+        "pooled": _score_block(
+            y, {"rf": oof["rf"], "logreg": oof["logreg"], "neg_h": h_score}
+        ),
+        "pooled_rule_precision": float(_rule_eval(df)["precision"]),
+        "temporal": None,
+    }
+    if temporal.get("available") and "_test_scores" in temporal:
+        idx = temporal["_test_index"]
+        ty = df.loc[idx, TARGET_COLUMN].to_numpy()
+        ts = dict(temporal["_test_scores"])
+        ts["neg_h"] = -df.loc[idx, "absolute_magnitude_h"].to_numpy()
+        out["temporal"] = _score_block(ty, ts)
+        out["temporal"]["rule_precision"] = float(_rule_eval(df.loc[idx])["precision"])
+    return out
+
+
 # ---------------------------------------------------------------- experimento
 
 def run_experiment(df_raw: pd.DataFrame, seed: int = SEED) -> dict:
@@ -413,6 +491,7 @@ def run_experiment(df_raw: pd.DataFrame, seed: int = SEED) -> dict:
     temporal = run_temporal(df, warns)
     diam = diameter_analysis(df, cv)
     reference = run_reference_rule(df, folds, temporal)
+    exploratory = run_exploratory(df, cv, temporal)
 
     return {
         "df": df,
@@ -423,6 +502,7 @@ def run_experiment(df_raw: pd.DataFrame, seed: int = SEED) -> dict:
         "temporal": temporal,
         "diameter": diam,
         "reference": reference,
+        "exploratory": exploratory,
         "warnings": warns,
         "seed": seed,
     }
@@ -486,6 +566,15 @@ def build_notes(res: dict) -> str:
             f"F1 {_f(t_['f1'])}"
         )
     parts.append(ref_txt + ".")
+    e = res["exploratory"]["pooled"]
+    p95, p99 = e["rf"]["points"]
+    parts.append(
+        "Analise exploratoria posterior, fora do plano original, sobre as probabilidades "
+        f"fora da amostra agrupadas: PR-AUC de -H sem treino {_f(e['neg_h']['pr_auc'])} "
+        f"(RF agrupado {_f(e['rf']['pr_auc'])}); precisao maxima do RF com recall >= 0.95: "
+        f"{_f(p95['precision'])}, com recall >= 0.99: {_f(p99['precision'])} "
+        "(regra H <= 22: 0.3900)."
+    )
     if res["warnings"]:
         parts.append("Avisos: " + "; ".join(res["warnings"]) + ".")
     return " ".join(parts)
@@ -632,6 +721,52 @@ def build_report(res: dict, trained_at: str) -> str:
     L.append("- miss_distance_lunar e a distancia de uma aproximacao especifica.")
     L.append("- Unidade de avaliacao e a linha; o mesmo asteroide tem varias linhas, "
              "por isso os folds agrupam por neo_id.")
+    ex = res["exploratory"]
+    L.append("")
+    L.append("9. Analise exploratoria posterior (nao fez parte do plano original)")
+    L.append("Acrescentada depois da primeira execucao. Nao altera nenhuma metrica das secoes 1 a 8.")
+    L.append("Usa as probabilidades fora da amostra (out-of-fold) dos mesmos 5 folds (mesma seed), juntas em um conjunto.")
+    L.append("Cada fold vem de um modelo diferente, entao o conjunto agrupado nao e o mesmo que a media dos folds.")
+    L.append("Pontuacao -H: pontuacao = -absolute_magnitude_h, sem treinar nada.")
+    labels = {"rf": "RandomForest", "logreg": "Regressao logistica", "neg_h": "-H (sem treino)"}
+
+    def expl_block(title, blk, extra):
+        L.append(title)
+        for k, lab in labels.items():
+            L.append(f"  {lab}: PR-AUC={_f(blk[k]['pr_auc'])}")
+            for pt in blk[k]["points"]:
+                if not pt["reachable"]:
+                    L.append(f"    recall >= {pt['min_recall']}: inalcancavel")
+                    continue
+                L.append(f"    recall >= {pt['min_recall']}: maior precisao={_f(pt['precision'])} "
+                         f"(recall={_f(pt['recall'])}, threshold={_f(pt['threshold'], 4)}, "
+                         f"{pt['n_flagged']} sinalizados para {pt['n_positive']} positivos)")
+        L.append(extra)
+
+    expl_block(
+        "9.1 e 9.2 Conjunto agrupado dos 5 folds:", ex["pooled"],
+        f"  Regra H <= 22 no conjunto agrupado: precisao={_f(ex['pooled_rule_precision'])} "
+        "(a media entre folds publicada e 0.3900).",
+    )
+    L.append(f"  Para comparar: PR-AUC do RF (media entre folds) = {_f(cv['summary']['rf']['pr_auc'])}, "
+             f"regressao logistica = {_f(cv['summary']['logreg']['pr_auc'])}.")
+    if ex["temporal"]:
+        te = dict(ex["temporal"])
+        rule_p = te.pop("rule_precision")
+        expl_block("9.3 Split temporal (treino antigo, teste recente):", te,
+                   f"  Regra H <= 22 no teste temporal: precisao={_f(rule_p)}.")
+    else:
+        L.append("9.3 Split temporal: indisponivel.")
+    oof_rf = res["cv"]["_oof"]["rf"]
+    y_all = res["df"][TARGET_COLUMN].to_numpy()
+    n_zero_pos = int(((oof_rf == 0) & (y_all == 1)).sum())
+    L.append(f"Nota sobre o RF com recall >= 0.99: no conjunto agrupado, {n_zero_pos} de {int(y_all.sum())} "
+             "positivos recebem probabilidade exatamente 0 do RF. Alcancar esse recall exige incluir todo "
+             "o conjunto (threshold 0), e a precisao cai para a prevalencia. Isso descreve a granularidade "
+             "das probabilidades do RF, nao um ajuste.")
+    L.append("Leitura: descricao apenas. Thresholds dos pontos de operacao sao lidos da curva e nao foram "
+             "usados para escolher nem ajustar modelo. Com poucas centenas de positivos, as diferencas "
+             "pequenas de precisao entre pontos vizinhos da curva sao instaveis.")
     return "\n".join(L) + "\n"
 
 

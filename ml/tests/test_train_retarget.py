@@ -108,3 +108,41 @@ def test_prepare_does_not_turn_string_f_into_positive():
     df["is_potentially_hazardous"] = df["is_potentially_hazardous"].map({True: "t", False: "f"})
     out = tr.prepare(df)
     assert out["is_potentially_hazardous"].sum() == (df["is_potentially_hazardous"] == "t").sum()
+
+
+def _shape(obj):
+    """Estrutura do JSON: chaves e tipos, sem valores."""
+    if isinstance(obj, dict):
+        return {k: _shape(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [type(v).__name__ for v in obj]
+    return type(obj).__name__
+
+
+def test_metrics_json_format_stable_with_exploratory_note(result, tmp_path):
+    tr.write_artifacts(result, out_docs=tmp_path / "docs", out_art=tmp_path / "art")
+    on_disk = json.loads((tmp_path / "docs" / "ml-metrics.json").read_text(encoding="utf-8"))
+    assert list(on_disk.keys()) == tr.METRICS_JSON_KEYS
+    shape = _shape(on_disk)
+    assert shape["baselines"] == {
+        "majority": {k: "float" for k in ("precision", "recall", "f1", "pr_auc")},
+        "logistic_regression": {k: "float" for k in ("precision", "recall", "f1", "pr_auc")},
+    }
+    assert shape["metrics"] == {
+        k: "float" for k in ("precision", "recall", "f1", "pr_auc", "std_between_folds")
+    }
+    assert shape["feature_importances"] == {c: "float" for c in tr.FEATURE_COLUMNS}
+    for key in ("status", "model_version", "trained_at", "target", "validation", "notes"):
+        assert shape[key] == "str"
+    assert shape["features"] == ["str", "str", "str"]
+    assert shape["n_samples"] == "int" and shape["n_asteroids"] == "int"
+    assert "exploratoria posterior" in on_disk["notes"].lower()
+
+
+def test_exploratory_does_not_change_published_metrics(result):
+    ex = result["exploratory"]["pooled"]
+    for name in ("rf", "logreg", "neg_h"):
+        assert 0.0 <= ex[name]["pr_auc"] <= 1.0
+        assert len(ex[name]["points"]) == 2
+    s = result["cv"]["summary"]["rf"]
+    assert set(s) >= {"precision", "recall", "f1", "pr_auc", "f1_std"}

@@ -1,6 +1,6 @@
 Astraea, relatorio do retarget do ML (fase 1)
 ==============================================
-Gerado em 2026-09-30T02:50:41.935255+00:00. Alvo: is_potentially_hazardous. Features: relative_velocity_km_s, miss_distance_lunar, absolute_magnitude_h.
+Gerado em 2026-09-30T02:55:20.825316+00:00. Alvo: is_potentially_hazardous. Features: relative_velocity_km_s, miss_distance_lunar, absolute_magnitude_h.
 Nada aqui foi ajustado para melhorar metrica. Configuracao fixada antes da execucao.
 
 1. Dados e prevalencia
@@ -87,3 +87,34 @@ Regra binaria: prediz positivo quando absolute_magnitude_h <= 22. PR-AUC nao se 
 - A flag da NASA depende de H e da MOID (0,05 UA); a MOID nao e feature.
 - miss_distance_lunar e a distancia de uma aproximacao especifica.
 - Unidade de avaliacao e a linha; o mesmo asteroide tem varias linhas, por isso os folds agrupam por neo_id.
+
+9. Analise exploratoria posterior (nao fez parte do plano original)
+Acrescentada depois da primeira execucao. Nao altera nenhuma metrica das secoes 1 a 8.
+Usa as probabilidades fora da amostra (out-of-fold) dos mesmos 5 folds (mesma seed), juntas em um conjunto.
+Cada fold vem de um modelo diferente, entao o conjunto agrupado nao e o mesmo que a media dos folds.
+Pontuacao -H: pontuacao = -absolute_magnitude_h, sem treinar nada.
+9.1 e 9.2 Conjunto agrupado dos 5 folds:
+  RandomForest: PR-AUC=0.6394
+    recall >= 0.95: maior precisao=0.4045 (recall=0.9524, threshold=0.0700, 445 sinalizados para 189 positivos)
+    recall >= 0.99: maior precisao=0.0907 (recall=1.0000, threshold=0.0000, 2083 sinalizados para 189 positivos)
+  Regressao logistica: PR-AUC=0.4019
+    recall >= 0.95: maior precisao=0.3327 (recall=0.9524, threshold=0.0862, 541 sinalizados para 189 positivos)
+    recall >= 0.99: maior precisao=0.2961 (recall=0.9947, threshold=0.0655, 635 sinalizados para 189 positivos)
+  -H (sem treino): PR-AUC=0.3592
+    recall >= 0.95: maior precisao=0.3928 (recall=0.9788, threshold=-21.9200, 471 sinalizados para 189 positivos)
+    recall >= 0.99: maior precisao=0.3892 (recall=0.9947, threshold=-22.0000, 483 sinalizados para 189 positivos)
+  Regra H <= 22 no conjunto agrupado: precisao=0.3892 (a media entre folds publicada e 0.3900).
+  Para comparar: PR-AUC do RF (media entre folds) = 0.6481, regressao logistica = 0.4180.
+9.3 Split temporal (treino antigo, teste recente):
+  RandomForest: PR-AUC=0.5548
+    recall >= 0.95: maior precisao=0.3590 (recall=0.9767, threshold=0.0600, 117 sinalizados para 43 positivos)
+    recall >= 0.99: maior precisao=0.1103 (recall=1.0000, threshold=0.0000, 390 sinalizados para 43 positivos)
+  Regressao logistica: PR-AUC=0.4180
+    recall >= 0.95: maior precisao=0.3178 (recall=0.9535, threshold=0.0803, 129 sinalizados para 43 positivos)
+    recall >= 0.99: maior precisao=0.2945 (recall=1.0000, threshold=0.0669, 146 sinalizados para 43 positivos)
+  -H (sem treino): PR-AUC=0.3564
+    recall >= 0.95: maior precisao=0.3534 (recall=0.9535, threshold=-21.7900, 116 sinalizados para 43 positivos)
+    recall >= 0.99: maior precisao=0.2966 (recall=1.0000, threshold=-22.4400, 145 sinalizados para 43 positivos)
+  Regra H <= 22 no teste temporal: precisao=0.3333.
+Nota sobre o RF com recall >= 0.99: no conjunto agrupado, 2 de 189 positivos recebem probabilidade exatamente 0 do RF. Alcancar esse recall exige incluir todo o conjunto (threshold 0), e a precisao cai para a prevalencia. Isso descreve a granularidade das probabilidades do RF, nao um ajuste.
+Leitura: descricao apenas. Thresholds dos pontos de operacao sao lidos da curva e nao foram usados para escolher nem ajustar modelo. Com poucas centenas de positivos, as diferencas pequenas de precisao entre pontos vizinhos da curva sao instaveis.
