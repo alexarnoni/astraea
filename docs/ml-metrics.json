@@ -1,0 +1,41 @@
+{
+  "status": "retargeted",
+  "model_version": "2.0.0",
+  "trained_at": "2026-09-30T02:50:41.935255+00:00",
+  "target": "is_potentially_hazardous",
+  "features": [
+    "relative_velocity_km_s",
+    "miss_distance_lunar",
+    "absolute_magnitude_h"
+  ],
+  "validation": "StratifiedGroupKFold(5) por neo_id, shuffle, seed 42; media entre folds; unidade de avaliacao: linha",
+  "n_samples": 2083,
+  "n_asteroids": 1822,
+  "baselines": {
+    "majority": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "pr_auc": 0.09072988231443183
+    },
+    "logistic_regression": {
+      "precision": 0.37887106357694594,
+      "recall": 0.1702372336518678,
+      "f1": 0.23297469961561174,
+      "pr_auc": 0.4180372588265454
+    }
+  },
+  "metrics": {
+    "precision": 0.6396071428571429,
+    "recall": 0.43802591607469665,
+    "f1": 0.5179501640689089,
+    "pr_auc": 0.648124302611951,
+    "std_between_folds": 0.049573110182338585
+  },
+  "feature_importances": {
+    "relative_velocity_km_s": 0.1701173982142736,
+    "miss_distance_lunar": 0.16134676766725398,
+    "absolute_magnitude_h": 0.6685358341184725
+  },
+  "notes": "Threshold fixo 0.5, sem tuning. Hiperparametros do RandomForest herdados do train.py atual (n_estimators=100, random_state=42, class_weight=balanced), so o alvo mudou. Diametro: Spearman entre diameter_avg_km e absolute_magnitude_h = -1.0000. F1 sem diameter 0.5180, com diameter 0.5510; PR-AUC sem 0.6481, com 0.6531. Conjunto final segue sem diameter_avg_km. Temporal (corte em 2026-07-12): F1 0.3881, PR-AUC 0.5548, prevalencia no teste 0.1103; 95 de 390 neo_id do teste tambem aparecem no treino. Sem neo_id sobrepostos: F1 0.4000, PR-AUC 0.5532. Limitacao: a flag da NASA e definida por H (absolute_magnitude_h) e pela MOID (distancia minima de intersecao orbital, limite de 0,05 UA); a MOID nao e feature, entao o modelo aproxima a flag sem ver o determinante orbital. miss_distance_lunar e a distancia de uma aproximacao especifica, nao a MOID nem uma propriedade estavel do asteroide. Unidade de avaliacao: linha (aproximacao), o que aproxima a avaliacao por asteroide. Referencia acrescentada depois da primeira execucao, sem ajuste: regra absolute_magnitude_h <= 22 como preditor da flag, nos mesmos folds: precisao 0.3900, recall 0.9949, F1 0.5599; no teste temporal: precisao 0.3333, recall 0.9767, F1 0.4970. Avisos: desbalanceamento: prevalencia da classe positiva = 0.0907."
+}

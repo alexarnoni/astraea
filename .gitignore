@@ -49,3 +49,8 @@ notebooks/.ipynb_checkpoints/
 
 # dbt profiles (contains credentials)
 dbt/profiles/
+
+# Retarget (fase 1): modelo candidato, fora de ml/models/
+ml/artifacts_retarget/*.joblib
+mart_asteroids.csv
+mart_asteroids.csv
