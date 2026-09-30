@@ -10,6 +10,7 @@ import json
 import os
 import sys
 import unicodedata
+import warnings
 from pathlib import Path
 
 import joblib
@@ -23,6 +24,10 @@ _ROOT_DIR = _ML_DIR.parent
 _DOTENV_PATH = _ROOT_DIR / ".env"
 _MODEL_PATH = _ML_DIR / "models" / "risk_classifier.joblib"
 _METADATA_PATH = _ML_DIR / "models" / "metadata.json"
+# Modelo novo (alvo is_potentially_hazardous). Nomes proprios: nunca sobrescrevem o
+# modelo legado nem o metadata.json, que a API le para informar o model_version.
+_PHA_MODEL_PATH = _ML_DIR / "models" / "pha_classifier.joblib"
+_PHA_METADATA_PATH = _ML_DIR / "models" / "metadata_pha.json"
 
 FEATURE_COLUMNS = [
     "miss_distance_lunar",
@@ -31,6 +36,84 @@ FEATURE_COLUMNS = [
     "absolute_magnitude_h",
     "is_potentially_hazardous",
 ]
+
+
+def _load_pha_model():
+    """Carrega o modelo PHA (2.0.0) e seu metadata.
+
+    Retorna (model, model_version, feature_columns), ou None se os arquivos nao existem
+    ou o modelo e invalido. Nunca levanta: o scoring legado nao pode depender dele.
+    Avisos de versao do scikit-learn sao tratados como erro (modelo de outra versao
+    pode prever errado em silencio).
+    """
+    if not _PHA_MODEL_PATH.exists() or not _PHA_METADATA_PATH.exists():
+        print("[INFO] Modelo PHA nao encontrado. pha_probability e pha_model_version ficam NULL.")
+        return None
+    try:
+        import joblib
+        from sklearn.exceptions import InconsistentVersionWarning
+
+        with open(_PHA_METADATA_PATH, "r", encoding="utf-8") as f:
+            meta = json.load(f)
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", InconsistentVersionWarning)
+            model = joblib.load(_PHA_MODEL_PATH)
+
+        features = list(meta["feature_columns"])
+        version = meta["model_version"]
+        if not isinstance(version, str) or not version:
+            raise ValueError("model_version ausente no metadata_pha.json")
+        if list(model.feature_names_in_) != features:
+            raise ValueError("feature_columns do metadata difere das features do modelo")
+        if 1 not in list(model.classes_):
+            raise ValueError("o modelo nao tem a classe positiva 1")
+    except Exception as exc:  # qualquer falha desliga so o modelo novo
+        print(
+            f"[ERROR] Modelo PHA invalido ({type(exc).__name__}: {exc}). "
+            "Continuando sem pha_probability.",
+            file=sys.stderr,
+        )
+        return None
+    return model, version, features
+
+
+def _score_pha(df, model, features) -> list:
+    """Probabilidade da classe positiva por linha; None onde faltar alguma feature."""
+    X = df[features].astype(float)
+    ok = X.notna().all(axis=1).to_numpy()
+    result: list = [None] * len(df)
+    if ok.any():
+        pos_idx = list(model.classes_).index(1)
+        proba = model.predict_proba(X[ok])[:, pos_idx]
+        it = iter(proba)
+        result = [float(next(it)) if flag else None for flag in ok]
+    return result
+
+
+def _ml_table_has_pha_columns(conn) -> bool:
+    rows = conn.execute(
+        text(
+            "SELECT column_name FROM information_schema.columns "
+            "WHERE table_schema = 'mart' AND table_name = 'mart_asteroids_ml' "
+            "AND column_name IN ('pha_probability', 'pha_model_version')"
+        )
+    ).fetchall()
+    return len(rows) == 2
+
+
+_INSERT_LEGACY = """
+    INSERT INTO mart.mart_asteroids_ml
+        (neo_id, feed_date, risk_proba_baixo, risk_proba_medio, risk_proba_alto, risk_label_ml)
+    VALUES (:neo_id, :feed_date, :risk_proba_baixo, :risk_proba_medio, :risk_proba_alto, :risk_label_ml)
+"""
+
+_INSERT_WITH_PHA = """
+    INSERT INTO mart.mart_asteroids_ml
+        (neo_id, feed_date, risk_proba_baixo, risk_proba_medio, risk_proba_alto, risk_label_ml,
+         pha_probability, pha_model_version)
+    VALUES (:neo_id, :feed_date, :risk_proba_baixo, :risk_proba_medio, :risk_proba_alto, :risk_label_ml,
+            :pha_probability, :pha_model_version)
+"""
 
 
 def _make_engine(database_url: str):
@@ -150,6 +233,16 @@ def run_scoring() -> None:
         risk_proba_alto = probas[:, idx_alto]
         risk_labels = predicted_classes
 
+        # 5b. Modelo novo (opcional): probabilidade de a flag PHA ser positiva
+        pha = _load_pha_model()
+        if pha is not None:
+            pha_model, pha_version, pha_features = pha
+            print(f"[INFO] pha_model_version: {pha_version}")
+            pha_probas = _score_pha(df, pha_model, pha_features)
+        else:
+            pha_version = None
+            pha_probas = [None] * len(df)
+
         # 6. Montar lista de dicts para batch update
         records = [
             {
@@ -159,11 +252,13 @@ def run_scoring() -> None:
                 "risk_proba_medio": float(pm),
                 "risk_proba_alto": float(pa),
                 "risk_label_ml": str(label),
+                "pha_probability": pp,
+                "pha_model_version": pha_version if pp is not None else None,
             }
-            for neo_id, feed_date, pb, pm, pa, label in zip(
+            for neo_id, feed_date, pb, pm, pa, label, pp in zip(
                 df["neo_id"], df["feed_date"],
                 risk_proba_baixo, risk_proba_medio, risk_proba_alto,
-                risk_labels,
+                risk_labels, pha_probas,
             )
         ]
 
@@ -171,15 +266,13 @@ def run_scoring() -> None:
         # Seguro porque o dbt recria mart_asteroids_ml a cada execução,
         # então a tabela sempre reflete o estado atual de mart_asteroids.
     with engine.begin() as conn:
+        # Se as colunas pha_* ainda nao existem (migration 003 / dbt nao aplicados),
+        # cai no INSERT legado em vez de quebrar o pipeline.
+        has_pha = _ml_table_has_pha_columns(conn)
+        if not has_pha:
+            print("[WARNING] Colunas pha_* ausentes em mart.mart_asteroids_ml. Gravando so as colunas legadas.")
         conn.execute(text("DELETE FROM mart.mart_asteroids_ml"))
-        conn.execute(
-            text("""
-                INSERT INTO mart.mart_asteroids_ml
-                    (neo_id, feed_date, risk_proba_baixo, risk_proba_medio, risk_proba_alto, risk_label_ml)
-                VALUES (:neo_id, :feed_date, :risk_proba_baixo, :risk_proba_medio, :risk_proba_alto, :risk_label_ml)
-            """),
-            records,
-        )
+        conn.execute(text(_INSERT_WITH_PHA if has_pha else _INSERT_LEGACY), records)
 
     n = len(records)
     print(f"Updated {n} records.")
