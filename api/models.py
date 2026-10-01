@@ -23,6 +23,8 @@ class AsteroidResponse(BaseModel):
     risk_proba_medio: Optional[float] = None
     risk_proba_alto: Optional[float] = None
     risk_label_ml: Optional[str] = None
+    pha_probability: Optional[float] = None
+    pha_model_version: Optional[str] = None
     orbit_class: Optional[str] = None
     is_sentry_object: Optional[bool] = None
     first_observation_date: Optional[str] = None

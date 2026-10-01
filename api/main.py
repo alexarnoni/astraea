@@ -11,7 +11,10 @@ from routers import asteroids, solar_events, stats
 # Origens permitidas para CORS. Configurável via CORS_ALLOW_ORIGINS
 # (lista separada por vírgula). Default cobre o dashboard em produção
 # e o desenvolvimento local.
-_DEFAULT_ORIGINS = "https://astraea.alexarnoni.com,http://localhost:5500,http://127.0.0.1:5500"
+_DEFAULT_ORIGINS = (
+    "https://astraea.alexarnoni.com,https://alexarnoni.com,https://www.alexarnoni.com,"
+    "http://localhost:5500,http://127.0.0.1:5500"
+)
 CORS_ALLOW_ORIGINS = [
     origin.strip()
     for origin in os.environ.get("CORS_ALLOW_ORIGINS", _DEFAULT_ORIGINS).split(",")

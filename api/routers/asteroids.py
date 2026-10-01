@@ -56,6 +56,8 @@ def _row_to_asteroid(row) -> AsteroidResponse:
         risk_proba_medio=float(v) if (v := _safe_get(row, "risk_proba_medio")) is not None else None,
         risk_proba_alto=float(v) if (v := _safe_get(row, "risk_proba_alto")) is not None else None,
         risk_label_ml=_safe_get(row, "risk_label_ml"),
+        pha_probability=float(v) if (v := _safe_get(row, "pha_probability")) is not None else None,
+        pha_model_version=_safe_get(row, "pha_model_version"),
         orbit_class=_safe_get(row, "orbit_class"),
         is_sentry_object=_safe_get(row, "is_sentry_object"),
         first_observation_date=str(v) if (v := _safe_get(row, "first_observation_date")) is not None else None,
@@ -99,7 +101,9 @@ def list_asteroids(
                m.risk_proba_baixo,
                m.risk_proba_medio,
                m.risk_proba_alto,
-               m.risk_label_ml
+               m.risk_label_ml,
+               m.pha_probability,
+               m.pha_model_version
         FROM mart.mart_asteroids a
         LEFT JOIN mart.mart_asteroids_ml m
             ON a.neo_id = m.neo_id AND a.feed_date = m.feed_date
@@ -119,7 +123,9 @@ def upcoming_asteroids(request: Request, db: Session = Depends(get_db)):
                m.risk_proba_baixo,
                m.risk_proba_medio,
                m.risk_proba_alto,
-               m.risk_label_ml
+               m.risk_label_ml,
+               m.pha_probability,
+               m.pha_model_version
         FROM mart.mart_asteroids a
         LEFT JOIN mart.mart_asteroids_ml m
             ON a.neo_id = m.neo_id AND a.feed_date = m.feed_date
@@ -139,7 +145,9 @@ def get_asteroid(request: Request, neo_id: str, db: Session = Depends(get_db)):
                m.risk_proba_baixo,
                m.risk_proba_medio,
                m.risk_proba_alto,
-               m.risk_label_ml
+               m.risk_label_ml,
+               m.pha_probability,
+               m.pha_model_version
         FROM mart.mart_asteroids a
         LEFT JOIN mart.mart_asteroids_ml m
             ON a.neo_id = m.neo_id AND a.feed_date = m.feed_date
