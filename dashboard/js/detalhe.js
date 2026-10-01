@@ -84,7 +84,7 @@ function renderCountdownSection(asteroid) {
     return;
   }
 
-  const isHighRisk = asteroid.is_potentially_hazardous || asteroid.risk_label_ml === "alto";
+  const isHighRisk = asteroid.is_potentially_hazardous || asteroid.risk_label === "alto";
 
   function update() {
     const cd = calcCountdown(asteroid.close_approach_date);
@@ -144,13 +144,7 @@ export function renderMetricCards(asteroid) {
     ? formatNumber(asteroid.relative_velocity_km_s * 3600, 0)
     : "—";
 
-  const label = asteroid.risk_label_ml;
-  const cls = normalizeRiskClass(label);
-  const probaMap = { baixo: asteroid.risk_proba_baixo, medio: asteroid.risk_proba_medio, alto: asteroid.risk_proba_alto };
-  const predictedProba = probaMap[cls] ?? null;
-  const mlDisplay = predictedProba != null
-    ? `${Math.round(predictedProba * 100)}% probabilidade ${label ? renderRiskBadge(label) : ""}`
-    : "—";
+  const riskDisplay = asteroid.risk_label ? renderRiskBadge(asteroid.risk_label) : "-";
 
   const cards = [
     [
@@ -179,9 +173,9 @@ export function renderMetricCards(asteroid) {
       "Classificação oficial da NASA: indica se o objeto é potencialmente perigoso (PHA) com base em tamanho e distância.",
     ],
     [
-      mlDisplay,
-      "Score ML",
-      "Probabilidade atribuída pelo modelo de machine learning à classe de risco predita. O modelo em produção reproduz a regra de risco do projeto, que não é metodologia da NASA.",
+      riskDisplay,
+      "Risco do projeto",
+      "Rótulo calculado por uma regra própria do projeto (PHA, velocidade, distância e diâmetro), com limiares escolhidos pelo autor. Não é metodologia da NASA.",
     ],
     [
       asteroid.orbit_class ?? "—",
@@ -310,45 +304,28 @@ export function renderMLPanel(asteroid) {
   const container = document.getElementById("ml-panel");
   if (!container) return;
 
-  const probaBaixo = asteroid.risk_proba_baixo;
-  const probaMedio = asteroid.risk_proba_medio;
-  const probaAlto = asteroid.risk_proba_alto;
+  const proba = asteroid.pha_probability;
 
-  if (probaBaixo == null || probaMedio == null || probaAlto == null) {
-    container.innerHTML = `<p style="color:var(--muted);font-size:0.9rem">Análise de risco indisponível para este objeto</p>`;
+  if (proba == null) {
+    container.innerHTML = `<p style="color:var(--muted);font-size:0.9rem">Probabilidade de PHA indisponível para este objeto</p>`;
     return;
   }
 
-  const label = asteroid.risk_label_ml || "";
-  const cls = normalizeRiskClass(label);
-
-  const probaMap = { baixo: probaBaixo, medio: probaMedio, alto: probaAlto };
-  const predictedProba = probaMap[cls] ?? 0;
-  const pct = Math.round(predictedProba * 100);
-
-  const colors = { baixo: "#22c55e", medio: "#f59e0b", alto: "#ef4444" };
-
-  const probaRow = (name, displayLabel, value) => {
-    const color = colors[name];
-    const w = Math.round(value * 100);
-    return `<div class="proba-row">
-    <span class="proba-row__label">${displayLabel}</span>
-    <div class="proba-bar-track"><div class="proba-bar-fill" style="width:${w}%;background:${color}"></div></div>
-    <span class="proba-row__value">${w}%</span>
-  </div>`;
-  };
+  const pct = Math.round(proba * 100);
+  const version = asteroid.pha_model_version ? ` (modelo ${asteroid.pha_model_version})` : "";
 
   container.innerHTML = `<div class="ml-panel">
-  <p class="section-label">análise de risco — modelo ml</p>
-  <div style="margin-bottom:0.75rem"><span class="risk-badge risk-badge--${cls}">${label}</span></div>
+  <p class="section-label">probabilidade de PHA, modelo de ml</p>
   <p style="font-size:0.9rem;color:var(--muted);margin-bottom:0.75rem">
-    Classificado como <strong style="color:var(--text)">${label}</strong> risco com <strong style="color:var(--text)">${pct}%</strong> de probabilidade
+    Probabilidade estimada de a NASA classificar este objeto como potencialmente perigoso (PHA): <strong style="color:var(--text)">${pct}%</strong>${version}
   </p>
-  ${probaRow("baixo", "baixo", probaBaixo)}
-  ${probaRow("medio", "médio", probaMedio)}
-  ${probaRow("alto", "alto", probaAlto)}
+  <div class="proba-row">
+    <span class="proba-row__label">PHA</span>
+    <div class="proba-bar-track"><div class="proba-bar-fill" style="width:${pct}%;background:#ef4444"></div></div>
+    <span class="proba-row__value">${pct}%</span>
+  </div>
   <p style="font-size:0.8rem;color:var(--muted);margin-top:0.75rem;font-style:italic">
-    ⚠ Este modelo não substitui avaliações oficiais da NASA.
+    ⚠ Estimativa de um modelo de ML, com recall limitado. Não substitui avaliações oficiais da NASA.
   </p>
 </div>`;
 }

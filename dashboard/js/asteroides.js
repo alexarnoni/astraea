@@ -62,7 +62,7 @@ function renderTable(asteroids) {
       <td>${formatNumber(a.miss_distance_lunar, 2)} LD<br><small>${formatNumber(a.miss_distance_km, 0)} km</small></td>
       <td>${formatNumber(a.relative_velocity_km_s, 1)} km/s</td>
       <td>${formatNumber(a.estimated_diameter_min_km, 2)}–${formatNumber(a.estimated_diameter_max_km, 2)} km</td>
-      <td>${renderRiskBadge(a.risk_label_ml)}</td>
+      <td>${renderRiskBadge(a.risk_label)}</td>
     </tr>`
     )
     .join("");
