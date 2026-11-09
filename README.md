@@ -1,11 +1,21 @@
 # 🌌 Astraea
 
-Near-Earth Object (NEO) monitoring and solar event tracking platform. Asteroids get a rule-based risk heuristic defined by the project, and an ML model for the NASA hazard flag is being validated.
+Near-Earth Object (NEO) monitoring and solar event tracking platform built on NASA data.
 
 ## Live Demo
 
 - **Dashboard**: https://astraea.alexarnoni.com
 - **API docs**: https://astraea-api.alexarnoni.com/docs
+
+## Risk and model outputs
+
+| Output | What it measures | Status |
+|---|---|---|
+| Project heuristic (`risk_label`) | Rule-based risk category defined by this project | Shown on the dashboard and asteroid detail page |
+| Legacy Random Forest 1.0.0 (`risk_label_ml`) | Reproduces the project's rule-based category | Still used by the API risk filter and summary counts |
+| Random Forest 2.0.0 (`pha_probability`) | Estimates the probability of NASA's potentially hazardous asteroid (PHA) flag | Validated and in rollout. Values depend on publishing the model artifact and running scoring |
+
+At a threshold of 0.5, model 2.0.0 had a mean recall of 44% in grouped cross-validation, identifying fewer than half of the positive cases. See the [model evaluation](#ml-model) for metrics and limitations.
 
 ## Architecture
 
